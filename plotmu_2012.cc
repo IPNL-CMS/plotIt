@@ -13,10 +13,10 @@
 /*  p.plotstack("hNBtaggedJets_beforesel");
   c1.SaveAs("plots/nBJets_beforesel_semimu.pdf");*/
 
-  p.plotstack("hNBtaggedJets");
+  p.plotstack("hNBtaggedJets", 1, 1, "Number of b-tagged jets");
   c1.SaveAs("plots/nBJets_semimu.pdf");
 
-  p.plotstack("hmttSelected2b", 4);
+  p.plotstack("hmttSelected2b", 5);
   c1.SaveAs("plots/mtt_2btag_semimu.pdf");
 
 /*  p.plotstack("hLeptonPt_beforesel", 4);
@@ -43,7 +43,7 @@
 /*  p.plotstack("h3rdjetpt_beforesel", 4);
   c1.SaveAs("plots/thirdjet_beforesel_semimu.pdf");*/
 
-  p.plotstack("h4thjetpt", 4);
+  p.plotstack("h4thjetpt", 4, 1, "4^{th} jet p_{T} [GeV/c]");
   c1.SaveAs("plots/fourthjet_semimu.pdf");
 
 /*  p.plotstack("h4thjetpt_beforesel", 4);
