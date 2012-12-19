@@ -159,8 +159,8 @@ void h1_style(TH1 *h,
   h->SetMarkerSize(marker_size);
   h->SetStats(optstat);
 
-  h->SetLabelFont(62,"X");       // 42
-  h->SetLabelFont(62,"Y");       // 42
+  h->SetLabelFont(42,"X");       // 42
+  h->SetLabelFont(42,"Y");       // 42
   h->SetLabelOffset(0.01,"X");  // D=0.005
   h->SetLabelOffset(0.01,"Y");  // D=0.005
   h->SetLabelSize(0.045,"X");
@@ -170,6 +170,7 @@ void h1_style(TH1 *h,
   h->SetTitleSize(0.06,"X");
   h->SetTitleSize(0.06,"Y");
   h->SetTitle(0);
+  h->SetTitleFont(42, "XYZ");
 }
 
 //==============================================================================
@@ -298,9 +299,8 @@ bool PlotIt::init()
   cout << "#  Luminosity: " << _lumi << " /pb" << endl;
 
   if ( _efficiency != 1. ) {
-    _lumi *= _efficiency;
     cout << " Integrated luminosity mutiplied by : " << _efficiency << endl;
-    cout << " New Integrated luminosity          = " << _lumi       << endl;
+    cout << " New Integrated luminosity          = " << _lumi * _efficiency << endl;
   }
 
   cout << "######################################################################################################" << endl << endl;
@@ -351,7 +351,7 @@ void PlotIt::plot(const TString& histo,Int_t rebin, TString xtitle, TString legp
   _hdata->Draw("esames");
 
   TLatex *t1 = new TLatex();
-  t1->SetTextFont(62);
+  t1->SetTextFont(42);
   t1->SetTextColor(1);   // 4
   t1->SetTextAlign(12);
   t1->SetTextSize(0.05);
@@ -371,7 +371,7 @@ void PlotIt::plot(const TString& histo,Int_t rebin, TString xtitle, TString legp
   leg->SetTextSize(0.04);
   leg->SetFillStyle(1);
   leg->SetFillColor(10);
-  leg->SetTextFont(52);
+  leg->SetTextFont(42);
   leg->SetTextAlign(32);
 
   leg->AddEntry(_hdata,"Data","P");
@@ -381,6 +381,7 @@ void PlotIt::plot(const TString& histo,Int_t rebin, TString xtitle, TString legp
   leg->Draw();
 
   gPad->Update();
+  gPad->RedrawAxis();
   // Stats
   /*
      TPaveStats *stats1 = (TPaveStats*)_hdata->GetListOfFunctions()->FindObject("stats");
@@ -396,6 +397,7 @@ void PlotIt::plot(const TString& histo,Int_t rebin, TString xtitle, TString legp
      stats2->SetX2NDC(0.90);  stats2->SetY2NDC(0.98);
      */
   gPad->Update();
+  gPad->RedrawAxis();
   _hdata->Draw("axissame");
 
 }
@@ -445,7 +447,7 @@ void PlotIt::plot2(const TString& histo,Int_t rebin, TString xtitle, TString leg
   _hdata->Draw("esames");
 
   TLatex *t1 = new TLatex();
-  t1->SetTextFont(62);
+  t1->SetTextFont(42);
   t1->SetTextColor(1);   // 4
   t1->SetTextAlign(12);
   t1->SetTextSize(0.05);
@@ -465,7 +467,7 @@ void PlotIt::plot2(const TString& histo,Int_t rebin, TString xtitle, TString leg
   leg->SetTextSize(0.04);
   leg->SetFillStyle(1);
   leg->SetFillColor(10);
-  leg->SetTextFont(52);
+  leg->SetTextFont(42);
   leg->SetTextAlign(32);
 
   leg->AddEntry(_hdata, std::string("Data (" + GetLumiLabel() + ")").c_str(),"P");
@@ -475,6 +477,7 @@ void PlotIt::plot2(const TString& histo,Int_t rebin, TString xtitle, TString leg
   leg->Draw();
 
   gPad->Update();
+  gPad->RedrawAxis();
   // Stats
   /*
      TPaveStats *stats1 = (TPaveStats*)_hdata->GetListOfFunctions()->FindObject("stats");
@@ -490,6 +493,7 @@ void PlotIt::plot2(const TString& histo,Int_t rebin, TString xtitle, TString leg
      stats2->SetX2NDC(0.90);  stats2->SetY2NDC(0.98);
      */
   gPad->Update();
+  gPad->RedrawAxis();
   _hdata->Draw("axissame");
 
 }
@@ -543,7 +547,7 @@ void PlotIt::plotbase(const TString& histo)
         _hmc = (TH1F*)tempmc->Clone("HMC");
         _hmc->Reset();
       }
-      Float_t intlumi = _lumi;
+      Float_t intlumi = _lumi * _efficiency;
       Float_t Factor   = intlumi * _inputs[i].xsec / (Float_t)_inputs[i].ngen;
       Float_t nentries = (Float_t)tempmc->Integral();
 
@@ -580,7 +584,7 @@ void PlotIt::plotbase(const TString& histo)
         _hsig = (TH1F*)tempsig->Clone("HSIG");
         _hsig->Reset();
       }
-      Float_t Factor   = _lumi * _inputs[i].xsec / (Float_t)_inputs[i].ngen;
+      Float_t Factor   = _lumi * _efficiency * _inputs[i].xsec / (Float_t)_inputs[i].ngen;
       Float_t nentries = (Float_t)tempsig->Integral();
 
       _inputs[i].Nexp    = nentries * Factor;
@@ -693,7 +697,7 @@ void PlotIt::plotstack(const TString& histo,Int_t rebin, Int_t mode, TString xti
         _hmc = (TH1F*)tempmc->Clone("HMC");
         _hmc->Reset();
       }
-      Float_t intlumi = _lumi;
+      Float_t intlumi = _lumi * _efficiency;
       Float_t Factor   = intlumi * _inputs[i].xsec / (Float_t)_inputs[i].ngen;
       Float_t nentries = (Float_t)tempmc->Integral();
 
@@ -772,7 +776,7 @@ void PlotIt::plotstack(const TString& histo,Int_t rebin, Int_t mode, TString xti
         _hsig = (TH1F*)tempsig->Clone("HSIG");
         _hsig->Reset();
       }
-      Float_t Factor   = _lumi * _inputs[i].xsec / (Float_t)_inputs[i].ngen;
+      Float_t Factor   = _lumi * _efficiency * _inputs[i].xsec / (Float_t)_inputs[i].ngen;
       Float_t nentries = (Float_t)tempsig->Integral();
 
       _inputs[i].Nexp    = nentries * Factor;
@@ -926,21 +930,23 @@ void PlotIt::plotstack(const TString& histo,Int_t rebin, Int_t mode, TString xti
     if (_hdata) _hdata->Draw("esame");
   }
 
-  _hstack->GetHistogram()->SetLabelFont(62,"X");       // 42
-  _hstack->GetHistogram()->SetLabelFont(62,"Y");       // 42
+  _hstack->GetHistogram()->SetLabelFont(42,"X");       // 42
+  _hstack->GetHistogram()->SetLabelFont(42,"Y");       // 42
   _hstack->GetHistogram()->SetLabelOffset(0.01,"X");  // D=0.005
   _hstack->GetHistogram()->SetLabelOffset(0.01,"Y");  // D=0.005
   _hstack->GetHistogram()->SetLabelSize(0.045,"X");
   _hstack->GetHistogram()->SetLabelSize(0.045,"Y");
+
   _hstack->GetHistogram()->SetTitleOffset(1.0,"X");
   _hstack->GetHistogram()->SetTitleOffset(1.2,"Y");
+
   _hstack->GetHistogram()->SetTitleSize(0.06,"X");
   _hstack->GetHistogram()->SetTitleSize(0.06,"Y");
   _hstack->GetHistogram()->SetTitle(0);
 
   //  TText *t1 = new TText();
   TLatex *t1 = new TLatex();
-  t1->SetTextFont(62);
+  t1->SetTextFont(42);
   t1->SetTextColor(1);   // 4
   t1->SetTextAlign(12);
   t1->SetTextSize(0.05);
@@ -962,7 +968,7 @@ void PlotIt::plotstack(const TString& histo,Int_t rebin, Int_t mode, TString xti
   leg->SetTextSize(0.03);
   leg->SetFillStyle(1);
   leg->SetFillColor(10);
-  leg->SetTextFont(52);
+  leg->SetTextFont(42);
   leg->SetTextAlign(32);
   leg->SetBorderSize(1);
 
@@ -981,6 +987,7 @@ void PlotIt::plotstack(const TString& histo,Int_t rebin, Int_t mode, TString xti
   leg->Draw();
 
   gPad->Update();
+  gPad->RedrawAxis();
   // Stats
   /*
      TPaveStats *stats1 = (TPaveStats*)_hdata->GetListOfFunctions()->FindObject("stats");
@@ -997,6 +1004,7 @@ void PlotIt::plotstack(const TString& histo,Int_t rebin, Int_t mode, TString xti
      */
 
   gPad->Update();
+  gPad->RedrawAxis();
   //  _hdata->Draw("axissame");
 
 }
@@ -1072,7 +1080,7 @@ void PlotIt::plotstack_ratio(const TString& histo,Int_t rebin, Int_t mode, TStri
         _hmc = (TH1F*)tempmc->Clone("HMC");
         _hmc->Reset();
       }
-      Float_t intlumi = _lumi;
+      Float_t intlumi = _lumi * _efficiency;
       Float_t Factor   = intlumi * _inputs[i].xsec / (Float_t)_inputs[i].ngen;
       Float_t nentries = (Float_t)tempmc->Integral();
 
@@ -1151,7 +1159,7 @@ void PlotIt::plotstack_ratio(const TString& histo,Int_t rebin, Int_t mode, TStri
         _hsig = (TH1F*)tempsig->Clone("HSIG");
         _hsig->Reset();
       }
-      Float_t Factor   = _lumi * _inputs[i].xsec / (Float_t)_inputs[i].ngen;
+      Float_t Factor   = _lumi * _efficiency * _inputs[i].xsec / (Float_t)_inputs[i].ngen;
       Float_t nentries = (Float_t)tempsig->Integral();
 
       _inputs[i].Nexp    = nentries * Factor;
@@ -1219,7 +1227,7 @@ void PlotIt::plotstack_ratio(const TString& histo,Int_t rebin, Int_t mode, TStri
   if (mode != 1 && _hsig != 0 && _hmc != 0) _hsig->Add(_hmc);
 
   if (_hdata)
-    h1_style(_hdata,3,1,1,1001,50,_ymin,_ymax,510,510,20,1,1.,1);//(_hdata,3,4,1,1001,50,_ymin,_ymax,510,510,20,1,1.,1);
+    h1_style(_hdata, 3, 1, 1, 1001, 50, _ymin, _ymax, 510, 510, 20, 1, 1., 1);//(_hdata,3,4,1,1001,50,_ymin,_ymax,510,510,20,1,1.,1);
 
   if (_hmc)
     h1_style(_hmc,  2,1,1,-1111,10,_ymin,_ymax,510,510,20,1,1.,1);
@@ -1258,10 +1266,9 @@ void PlotIt::plotstack_ratio(const TString& histo,Int_t rebin, Int_t mode, TStri
   if (_hdata && xtitle != "dummy") _hdata->GetXaxis()->SetTitle(xtitle.Data());
 
   Float_t inter = _hdata ? _hdata->GetXaxis()->GetXmax() - _hdata->GetXaxis()->GetXmin() : 1;
-  Short_t num   = _hdata ? (Short_t)(inter/(Float_t)_hdata->GetXaxis()->GetNbins()) : 1;
+  float num   = _hdata ? (inter / (Float_t) _hdata->GetXaxis()->GetNbins()) : 1;
 
-  TString ytitle = "";//"Events / ";
-  //  ytitle += num;
+  TString ytitle = TString::Format("Events / %.02f", num);
 
   if (_hdata)
     _hdata->GetYaxis()->SetTitle(ytitle.Data());
@@ -1273,14 +1280,17 @@ void PlotIt::plotstack_ratio(const TString& histo,Int_t rebin, Int_t mode, TStri
   // Data / MC comparison
   TPad* pad_hi = new TPad("pad_hi", "", 0., 0.33, 0.99, 0.99);
   pad_hi->Draw();
-  pad_hi->SetLeftMargin(0.12);
+  pad_hi->SetLeftMargin(0.17);
   pad_hi->SetBottomMargin(0.015);
+  pad_hi->SetRightMargin(0.015);
 
   TPad* pad_lo = new TPad("pad_lo", "", 0., 0., 0.99, 0.33);
   pad_lo->Draw();
-  pad_lo->SetLeftMargin(0.12);
+  pad_lo->SetLeftMargin(0.17);
   pad_lo->SetTopMargin(1.);
   pad_lo->SetBottomMargin(0.3);
+  pad_lo->SetRightMargin(0.015);
+  pad_lo->SetTickx(1);
 
   pad_hi->cd();
 
@@ -1320,21 +1330,42 @@ void PlotIt::plotstack_ratio(const TString& histo,Int_t rebin, Int_t mode, TStri
     if (_hdata) _hdata->Draw("esame");
   }
 
-  _hstack->GetHistogram()->SetLabelFont(62,"X");       // 42
-  _hstack->GetHistogram()->SetLabelFont(62,"Y");       // 42
-  _hstack->GetHistogram()->SetLabelOffset(0.01,"X");  // D=0.005
-  _hstack->GetHistogram()->SetLabelOffset(0.01,"Y");  // D=0.005
-  _hstack->GetHistogram()->SetLabelSize(0.045,"X");
+  if (_hdata) {
+    _hdata->GetYaxis()->SetTitleOffset(1.8);
+    _hdata->GetYaxis()->SetTitleSize(0.045);
+
+    _hdata->GetXaxis()->SetLabelSize(0.);
+
+    if (xtitle == "dummy")
+      xtitle = _hdata->GetXaxis()->GetTitle();
+
+    _hdata->GetXaxis()->SetTitle(NULL);
+    _hdata->GetXaxis()->SetTitleOffset(0);
+    _hdata->GetXaxis()->SetTitleSize(0);
+  }
+
+  _hstack->GetHistogram()->SetLabelFont(42,"X");       // 42
+  _hstack->GetHistogram()->SetLabelFont(42,"Y");       // 42
+
+  _hstack->GetHistogram()->SetLabelOffset(0.007,"X");  // D=0.005
+  _hstack->GetHistogram()->SetLabelOffset(0.007,"Y");  // D=0.005
+
+  _hstack->GetHistogram()->SetLabelSize(0,"X");
   _hstack->GetHistogram()->SetLabelSize(0.045,"Y");
-  _hstack->GetHistogram()->SetTitleOffset(1.0,"X");
-  _hstack->GetHistogram()->SetTitleOffset(1.2,"Y");
-  _hstack->GetHistogram()->SetTitleSize(0.06,"X");
-  _hstack->GetHistogram()->SetTitleSize(0.06,"Y");
+
+  _hstack->GetHistogram()->SetTitleOffset(1.8, "X");
+  _hstack->GetHistogram()->SetTitleOffset(0.55, "Y");
+
+  _hstack->GetHistogram()->SetTitleSize(0.09, "X");
+  _hstack->GetHistogram()->SetTitleSize(0.09, "Y");
+
+  _hstack->GetHistogram()->SetTitleFont(42, "XY");
+
   _hstack->GetHistogram()->SetTitle(0);
 
   //  TText *t1 = new TText();
   TLatex *t1 = new TLatex();
-  t1->SetTextFont(62);
+  t1->SetTextFont(42);
   t1->SetTextColor(1);   // 4
   t1->SetTextAlign(12);
   t1->SetTextSize(0.05);
@@ -1345,8 +1376,8 @@ void PlotIt::plotstack_ratio(const TString& histo,Int_t rebin, Int_t mode, TStri
   //  t1->DrawLatex(lx,ly,"D\\349 Run II - L=310pb^{-1}");
   //  t1->DrawTextNDC(0.35,0.93,"D\\349 Run II Preliminary");
 
-  Double_t x1=0.63; Double_t y1 = 0.63;
-  Double_t x2=0.93; Double_t y2 = 0.88;
+  Double_t x1=0.64; Double_t y1 = 0.60;
+  Double_t x2=0.94; Double_t y2 = 0.85;
   if (legpos != "right") {
     x1=0.17; y1 = 0.63;
     x2=0.37; y2 = 0.88;
@@ -1356,7 +1387,7 @@ void PlotIt::plotstack_ratio(const TString& histo,Int_t rebin, Int_t mode, TStri
   leg->SetTextSize(0.03);
   leg->SetFillStyle(1);
   leg->SetFillColor(10);
-  leg->SetTextFont(52);
+  leg->SetTextFont(42);
   leg->SetTextAlign(32);
   leg->SetBorderSize(1);
 
@@ -1375,6 +1406,7 @@ void PlotIt::plotstack_ratio(const TString& histo,Int_t rebin, Int_t mode, TStri
   leg->Draw();
 
   gPad->Update();
+  gPad->RedrawAxis();
   // Stats
   /*
      TPaveStats *stats1 = (TPaveStats*)_hdata->GetListOfFunctions()->FindObject("stats");
@@ -1391,6 +1423,7 @@ void PlotIt::plotstack_ratio(const TString& histo,Int_t rebin, Int_t mode, TStri
      */
 
   gPad->Update();
+  gPad->RedrawAxis();
   //  _hdata->Draw("axissame");
   //
   pad_lo->cd();
@@ -1399,12 +1432,49 @@ void PlotIt::plotstack_ratio(const TString& histo,Int_t rebin, Int_t mode, TStri
 
   TH1* data_clone = static_cast<TH1*>(_hdata->Clone("hdata_cloned"));
   data_clone->Divide(_hmc);
-  data_clone->SetMaximum(2);
-  data_clone->SetMinimum(0);
+  data_clone->SetMaximum(1.5);
+  data_clone->SetMinimum(0.5);
+
+  if (xtitle != "dummy")
+    data_clone->SetXTitle(xtitle.Data());
+  
+  data_clone->SetYTitle("Data / MC");
+  data_clone->SetXTitle(xtitle.Data());
+
+  data_clone->GetXaxis()->SetTitleOffset(1.10);
+  data_clone->GetYaxis()->SetTitleOffset(0.55);
+  data_clone->GetXaxis()->SetTickLength(0.06);
+  data_clone->GetXaxis()->SetLabelSize(0.085);
+  data_clone->GetYaxis()->SetLabelSize(0.07);
+  data_clone->GetXaxis()->SetTitleSize(0.09);
+  data_clone->GetYaxis()->SetTitleSize(0.08);
+  data_clone->GetYaxis()->SetNdivisions(505,true);
 
   data_clone->Draw("e");
 
+  // Fit the ratio
+  TF1* ratioFit = new TF1("ratioFit", "[0]");
+  ratioFit->SetParameter(0, 1.);
+  ratioFit->SetLineColor(46);
+  ratioFit->SetLineWidth(1.5);
+  data_clone->Fit(ratioFit, "Q");
+
+  ratioFit->Draw("same");
+
+  double fitValue = ratioFit->GetParameter(0);
+  double fitError = ratioFit->GetParError(0);
+
+  TPaveText* fitlabel = new TPaveText(0.65, 0.77, 0.98, 0.83, "brNDC");
+  fitlabel->SetTextFont(42);
+  fitlabel->SetTextSize(0.08);
+  fitlabel->SetFillColor(0);
+  TString fitLabelText = TString::Format("Fit: %.4f #pm %.4f", fitValue, fitError);
+  fitlabel->AddText(fitLabelText);
+
+  fitlabel->Draw("same");
+
   gPad->Update();
+  gPad->RedrawAxis();
 }
 
 //==============================================================================
@@ -1457,7 +1527,7 @@ void PlotIt::GetBinContent(const TString& histo, const Int_t& ibin, bool print)
         _hmc = (TH1F*)tempmc->Clone("HMC");
         _hmc->Reset();
       }
-      Float_t intlumi = _lumi;
+      Float_t intlumi = _lumi * _efficiency;
       Float_t Factor   = intlumi * _inputs[i].xsec / (Float_t)_inputs[i].ngen;
       Float_t nentries = (Float_t)tempmc->GetBinContent(ibin);
 
@@ -1488,7 +1558,7 @@ void PlotIt::GetBinContent(const TString& histo, const Int_t& ibin, bool print)
         _hsig = (TH1F*)tempsig->Clone("HSIG");
         _hsig->Reset();
       }
-      Float_t Factor   = _lumi * _inputs[i].xsec / (Float_t)_inputs[i].ngen;
+      Float_t Factor   = _lumi * _efficiency * _inputs[i].xsec / (Float_t)_inputs[i].ngen;
       Float_t nentries = (Float_t)tempsig->GetBinContent(ibin);
 
       _inputs[i].Nexp    = nentries * Factor;
@@ -1689,8 +1759,8 @@ TF1* PlotIt::plotqcd(int functype,float lo, float hi,int rebin,float upperl, flo
   //  func->SetRange(lo,500.);
   //  func->Draw("same");
 
-  _hstack->GetHistogram()->SetLabelFont(62,"X");       // 42
-  _hstack->GetHistogram()->SetLabelFont(62,"Y");       // 42
+  _hstack->GetHistogram()->SetLabelFont(42,"X");       // 42
+  _hstack->GetHistogram()->SetLabelFont(42,"Y");       // 42
   _hstack->GetHistogram()->SetLabelOffset(0.01,"X");  // D=0.005
   _hstack->GetHistogram()->SetLabelOffset(0.01,"Y");  // D=0.005
   _hstack->GetHistogram()->SetLabelSize(0.045,"X");
@@ -1703,7 +1773,7 @@ TF1* PlotIt::plotqcd(int functype,float lo, float hi,int rebin,float upperl, flo
 
   //  TText *t1 = new TText();
   TLatex *t1 = new TLatex();
-  t1->SetTextFont(62);
+  t1->SetTextFont(42);
   t1->SetTextColor(1);   // 4
   t1->SetTextAlign(12);
   t1->SetTextSize(0.05);
@@ -1721,7 +1791,7 @@ TF1* PlotIt::plotqcd(int functype,float lo, float hi,int rebin,float upperl, flo
   leg->SetTextSize(0.03);
   leg->SetFillStyle(1);
   leg->SetFillColor(10);
-  leg->SetTextFont(52);
+  leg->SetTextFont(42);
   leg->SetTextAlign(32);
   leg->SetBorderSize(1);
 
@@ -1739,6 +1809,7 @@ TF1* PlotIt::plotqcd(int functype,float lo, float hi,int rebin,float upperl, flo
   leg->Draw();
 
   gPad->Update();
+  gPad->RedrawAxis();
 
   //  cout << "Delete" << endl;
 
