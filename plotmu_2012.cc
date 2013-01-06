@@ -2,7 +2,7 @@
   gROOT->SetBatch();
   gSystem->Load("PlotIt_cc");
 
-  PlotIt p("semimu2012.list", 0.8615);
+  PlotIt p("semimu2012.list", 0.8743);
 
   p.plotstack_ratio("hNGoodJets");
   c1.SaveAs("plots/nJets_semimu.pdf");
