@@ -3,6 +3,7 @@ input/MTT_Histos_MuHad_Run2012A-recover.root                data           0    
 input/MTT_Histos_SingleMu_Run2012B-rereco.root              data           0            4446      1.
 input/MTT_Histos_SingleMu_Run2012C-rereco.root              data           0            495.003   1.
 input/MTT_Histos_SingleMu_Run2012C-prompt.root              data           0            6392      1.
+input/MTT_Histos_SingleMu_Run2012C-ecalrecover.root         data           0            134.242   1.
 input/MTT_Histos_SingleMu_Run2012D-prompt.root              data           0            4580      1.
 input/MTT_Histos_SingleMu_Run2012D-prompt_part2.root        data           0            2641      1.
 input/MTT_Histos_AntiSingleTop_tW-channel_semimu.root        mc           492537       11.1773   1.
