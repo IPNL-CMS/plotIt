@@ -2,7 +2,7 @@
   gROOT->SetBatch();
   gSystem->Load("PlotIt_cc");
 
-  PlotIt p("semie2012_2btag.list", 1);
+  PlotIt p("semie2012_2btag.list", 0.879188787);
 
   p.plotstack_ratio("hNGoodJets");
   c1.SaveAs("plots/2btag/nJets_semie.pdf");

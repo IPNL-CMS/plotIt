@@ -2,7 +2,7 @@
   gROOT->SetBatch();
   gSystem->Load("PlotIt_cc");
 
-  PlotIt p("semie2012_1btag.list", 1);
+  PlotIt p("semie2012_1btag.list", 1.015873901);
 
   p.plotstack_ratio("hNGoodJets");
   c1.SaveAs("plots/1btag/nJets_semie.pdf");
@@ -12,9 +12,10 @@
 
   p.plotstack_ratio("hElRelIso", 1, 1, "Electron relative isolation");
   c1.SaveAs("plots/1btag/Electron_relative_iso.pdf");
+  c1.SaveAs("plots/1btag/Electron_relative_iso.root");
 
   p.plotstack_ratio("hmttSelected_btag_sel", 5);
-  c1.SaveAs("plots/1btag/mtt_1btag_semie.pdf");
+  c1.SaveAs("plots/1btag/mtt_2btag_semie.pdf");
 
   p.plotstack_ratio("hmttSelected_btag_sel_mass_cut", 5);
   c1.SaveAs("plots/1btag/mtt_1btag_mass_cut_semie.pdf");
