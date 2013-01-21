@@ -1010,7 +1010,7 @@ void PlotIt::plotstack(const TString& histo,Int_t rebin, Int_t mode, TString xti
 }
 
 //==============================================================================
-void PlotIt::plotstack_ratio(const TString& histo,Int_t rebin, Int_t mode, TString xtitle, TString legpos)
+void PlotIt::plotstack_ratio(const TString& histo,Int_t rebin, bool log/* = false*/,Int_t mode, TString xtitle, TString legpos)
   //==============================================================================
 {
   std::ostream* aStream = &cout;
@@ -1293,6 +1293,8 @@ void PlotIt::plotstack_ratio(const TString& histo,Int_t rebin, Int_t mode, TStri
   pad_lo->SetTickx(1);
 
   pad_hi->cd();
+  if (log)
+    pad_hi->SetLogy(true);
 
   if ( _ymax < 0. ) {
     Stat_t max1 = _hdata ? _hdata->GetMaximum()*1.20 : 0;

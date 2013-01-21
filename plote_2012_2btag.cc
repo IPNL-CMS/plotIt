@@ -7,10 +7,10 @@
   p.plotstack_ratio("hNGoodJets");
   c1.SaveAs("plots/2btag/nJets_semie.pdf");
 
-  p.plotstack_ratio("hNBtaggedJets", 1, 1, "Number of b-tagged jets");
+  p.plotstack_ratio("hNBtaggedJets", 1, false, 1, "Number of b-tagged jets");
   c1.SaveAs("plots/2btag/nBJets_semie.pdf");
 
-  p.plotstack_ratio("hElRelIso", 1, 1, "Electron relative isolation");
+  p.plotstack_ratio("hElRelIso", 1, false, 1, "Electron relative isolation");
   c1.SaveAs("plots/2btag/Electron_relative_iso.pdf");
 
   p.plotstack_ratio("hmttSelected_btag_sel", 5);
@@ -31,7 +31,7 @@
   p.plotstack_ratio("h3rdjetpt", 4);
   c1.SaveAs("plots/2btag/thirdjet_semie.pdf");
 
-  p.plotstack_ratio("h4thjetpt", 4, 1, "4^{th} jet p_{T} [GeV/c]");
+  p.plotstack_ratio("h4thjetpt", 4, false, 1, "4^{th} jet p_{T} [GeV/c]");
   c1.SaveAs("plots/2btag/fourthjet_semie.pdf");
 
   p.plotstack_ratio("hMET", 4);

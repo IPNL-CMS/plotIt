@@ -93,7 +93,7 @@ public:
   void plot2(const TString& histo,Int_t rebin=1,TString xtitle="dummy",TString legpos="right");
     //  void GetBinContent(const TString& histo,const Int_t& ibin,bool print=true);
   void plotstack(const TString& histo,Int_t rebin=1,Int_t mode=1,TString xtitle="dummy",TString legpos="right");
-  void plotstack_ratio(const TString& histo, Int_t rebin=1, Int_t mode=1, TString xtitle="dummy", TString legpos="right");
+  void plotstack_ratio(const TString& histo, Int_t rebin=1, bool log = false, Int_t mode=1, TString xtitle="dummy", TString legpos="right");
 
   void GetBinContent(const TString& histo,const Int_t& ibin,bool print=true);
   TF1* plotqcd(int functype,float lo, float hi,int rebin=1,float upperl=40.,float fixpar = 0.);
