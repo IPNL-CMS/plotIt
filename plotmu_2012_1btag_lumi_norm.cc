@@ -2,7 +2,8 @@
   gROOT->SetBatch();
   gSystem->Load("PlotIt_cc");
 
-  PlotIt p("semimu2012_1btag.list", 0.946654613);
+  PlotIt p("semimu2012_1btag.list", .9779951);//powheg
+  //PlotIt p("semimu2012_1btag.list", .9679);//TTbar MG
 
   p.plotstack_ratio("hNGoodJets");
   c1.SaveAs("plots/1btag/nJets_semimu.pdf");
