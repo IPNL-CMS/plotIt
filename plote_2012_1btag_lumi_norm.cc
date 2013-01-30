@@ -2,7 +2,8 @@
   gROOT->SetBatch();
   gSystem->Load("PlotIt_cc");
 
-  PlotIt p("semie2012_1btag.list", 1.015873901);
+  PlotIt p("semie2012_1btag.list", 1.0597163);//powheg
+  //PlotIt p("semie2012_1btag.list", 1.015873901);//TTbar MG
 
   p.plotstack_ratio("hNGoodJets");
   c1.SaveAs("plots/1btag/nJets_semie.pdf");
