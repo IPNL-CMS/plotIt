@@ -17,6 +17,7 @@
 #include <vector>
 #include <map>
 #include <fstream>
+#include <limits>
 #include <TLorentzVector.h>
 
 #include "tclap/CmdLine.h"
@@ -65,7 +66,7 @@ namespace plotIt {
     else if (dynamic_cast<THStack*>(object))
       return getMaximum(dynamic_cast<THStack*>(object));
 
-    return 0;
+    return std::numeric_limits<float>::lowest();
   }
 
   plotIt::plotIt(const fs::path& outputPath, const std::string& configFile):
@@ -393,12 +394,14 @@ namespace plotIt {
     }
 
     // Build a THStack for MC files and a vector for signal
+    float mcIntegral = 0;
     std::shared_ptr<THStack> mc_stack = std::make_shared<THStack>("mc_stack", "mc_stack");
     std::vector<File> signals;
     std::vector<File> datas;
     for (File& file: m_files) {
       if (file.type == MC) {
         mc_stack->Add(dynamic_cast<TH1*>(file.object), file.drawing_options.c_str());
+        mcIntegral += dynamic_cast<TH1*>(file.object)->Integral();
       } else if (file.type == SIGNAL) {
         signals.push_back(file);
       } else if (file.type == DATA) {
@@ -406,7 +409,6 @@ namespace plotIt {
       }
     }
 
-    float mcIntegral = 0;
     std::shared_ptr<TH1> data;
     std::string data_drawing_options;
     if (datas.size()) {
@@ -417,7 +419,6 @@ namespace plotIt {
           data_drawing_options = d.drawing_options;
         }
         else {
-          mcIntegral += dynamic_cast<TH1*>(d.object)->Integral();
           data->Add(dynamic_cast<TH1*>(d.object));
         }
       }
@@ -447,6 +448,13 @@ namespace plotIt {
       toDraw.push_back(std::make_pair(signal.object, signal.drawing_options));
     }
 
+    // Remove NULL items
+    toDraw.erase(
+        std::remove_if(toDraw.begin(), toDraw.end(), [](std::pair<TObject*, std::string>& element) {
+          return element.first == nullptr;
+        })
+      );
+
     // Sort files
     std::sort(toDraw.begin(), toDraw.end(), [](std::pair<TObject*, std::string> a, std::pair<TObject*, std::string> b) {
         return getMaximum(a.first) > getMaximum(b.first);
@@ -463,7 +471,6 @@ namespace plotIt {
     // Then signal
     for (File& signal: signals) {
       std::string options = signal.drawing_options + " same";
-      signal.object->Print();
       signal.object->Draw(options.c_str());
     }
 
@@ -536,7 +543,6 @@ namespace plotIt {
         // Check name
         if (fnmatch(plot.name.c_str(), obj->GetName(), FNM_CASEFOLD) == 0) {
           // Got it!
-          std::cout << "Got object " << obj->GetName() << std::endl;
           match = true;
           plots.push_back(plot.Clone(obj->GetName()));
         }
