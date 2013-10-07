@@ -13,6 +13,7 @@
 #include <THStack.h>
 #include <TLegend.h>
 #include <TPaveText.h>
+#include <TColor.h>
 
 #include <vector>
 #include <map>
@@ -75,6 +76,35 @@ namespace plotIt {
       m_style.reset(createStyle());
       parseConfigurationFile(configFile);
     }
+
+  int16_t plotIt::loadColor(const YAML::Node& node) {
+    std::string value = node.as<std::string>();
+    if (value.length() > 1 && value[0] == '#' && ((value.length() == 7) || (value.length() == 9))) {
+      // RGB Color
+      std::string c = value.substr(1);
+      // Convert to int with hexadecimal base
+      uint32_t color = 0;
+      std::stringstream ss;
+      ss << std::hex << c;
+      ss >> color;
+
+      float a = 1;
+      if (color > 0xffffff) {
+        a = (color >> 24) / 255.0;
+      }
+
+      float r = ((color >> 16) & 0xff) / 255.0;
+      float g = ((color >> 8) & 0xff) / 255.0;
+      float b = ((color) & 0xff) / 255.0;
+
+      // Create new color
+      m_temporaryObjectsRuntime.push_back(std::make_shared<TColor>(m_colorIndex++, r, g, b, "", a));
+
+      return m_colorIndex - 1;
+    } else {
+      return node.as<int16_t>();
+    }
+  }
 
   void plotIt::parseConfigurationFile(const std::string& file) {
     YAML::Node f = YAML::LoadFile(file);
@@ -166,13 +196,13 @@ namespace plotIt {
       }
 
       if (node["fill-color"])
-        file.fill_color = node["fill-color"].as<int16_t>();
+        file.fill_color = loadColor(node["fill-color"]);
 
       if (node["fill-type"])
         file.fill_type = node["fill-type"].as<int16_t>();
 
       if (node["line-color"])
-        file.line_color = node["line-color"].as<int16_t>();
+        file.line_color = loadColor(node["line-color"]);
 
       if (node["line-type"])
         file.line_type = node["line-type"].as<int16_t>();
@@ -181,7 +211,7 @@ namespace plotIt {
         file.line_width = node["line-width"].as<float>();
 
       if (node["marker-color"])
-        file.marker_color = node["marker-color"].as<int16_t>();
+        file.marker_color = loadColor(node["marker-color"]);
 
       if (node["marker-type"])
         file.marker_type = node["marker-type"].as<int16_t>();

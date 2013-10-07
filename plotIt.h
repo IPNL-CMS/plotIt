@@ -134,6 +134,7 @@ namespace plotIt {
     private:
       void checkOrThrow(YAML::Node& node, const std::string& name, const std::string& file);
       void parseConfigurationFile(const std::string& file);
+      int16_t loadColor(const YAML::Node& node);
 
       // Plot method
       bool plot(Plot& plot);
@@ -157,6 +158,9 @@ namespace plotIt {
       // Store objects in order to delete everything when drawing is done
       std::vector<std::shared_ptr<TObject>> m_temporaryObjects;
 
+      // Temporary object living the whole runtime
+      std::vector<std::shared_ptr<TObject>> m_temporaryObjectsRuntime;
+
       // Current style
       std::shared_ptr<TStyle> m_style;
 
@@ -164,6 +168,9 @@ namespace plotIt {
 
       Legend m_legend;
       Configuration m_config;
+
+      // For colors
+      uint32_t m_colorIndex = 1000;
   };
 
 
