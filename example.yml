@@ -1,0 +1,51 @@
+files:
+  'test/DATA_MuHad_Run2012A-22Jan2013.root':
+    type: data
+    legend: "Data"
+  'test/DATA_SingleMu_Run2012B-TOPMuPlusJets-22Jan2013.root':
+    type: data
+  'test/DATA_SingleMu_Run2012C-TOPMuPlusJets-22Jan2013.root':
+    type: data
+  'test/DATA_SingleMu_Run2012D-TOPMuPlusJets-22Jan2013.root':
+    type: data
+
+  'test/MC_TTbar_SemiLept.root':
+    type: mc
+    cross-section: 245.8
+    branching-ratio: 0.444
+    generated-events: 25372496
+    fill-color: "#aaff00ff"
+  'test/MC_TTbar_FullLept.root':
+    type: mc
+    cross-section: 245.8
+    branching-ratio: 0.112
+    generated-events: 12096966
+    fill-color: "#123456"
+  'test/MC_W4jets.root':
+    type: mc
+    cross-section: 264.0
+    generated-events: 13358902
+    fill-color: "#123456"
+    legend: 'W + jets'
+  'test/MC_W1jets.root':
+    type: signal
+    cross-section: 17.4
+    generated-events: 25000
+    branching-ratio: 1
+    fill-color: 40
+    legend: "W + 1 jet"
+
+plots:
+  'VERTEX_NGOOD':
+    x-axis: test
+    y-axis: test2
+    rebin: 2
+    normalized: false
+
+legend:
+  position: [0.7, 0.8, 0.9, 0.9]
+
+configuration:
+  width: 800
+  height: 800
+  title: 'CMS, L = %lumi% fb^{-1}, #sqrt{s} = 8 TeV'
