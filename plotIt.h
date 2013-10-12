@@ -4,6 +4,8 @@
 
 #include "yaml-cpp/yaml.h"
 
+#include <TH1.h>
+#include <THStack.h>
 #include <TStyle.h>
 
 namespace YAML {
@@ -278,6 +280,38 @@ namespace plotIt {
 
     return style;
   }
+
+  template<class T>
+    void setAxisTitles(T* object, Plot& plot) {
+      if (plot.x_axis.length() > 0)
+        object->GetXaxis()->SetTitle(plot.x_axis.c_str());
+      if (plot.y_axis.length() > 0)
+        object->GetYaxis()->SetTitle(plot.y_axis.c_str());
+
+      object->GetYaxis()->SetTitleOffset(2);
+    }
+
+  void setAxisTitles(TObject* object, Plot& plot) {
+    if (dynamic_cast<TH1*>(object))
+      setAxisTitles(dynamic_cast<TH1*>(object), plot);
+    else if (dynamic_cast<THStack*>(object))
+      setAxisTitles(dynamic_cast<THStack*>(object), plot);
+  }
+
+  template<class T>
+    float getMaximum(T* object) {
+      return object->GetMaximum();
+    }
+
+  float getMaximum(TObject* object) {
+    if (dynamic_cast<TH1*>(object))
+      return getMaximum(dynamic_cast<TH1*>(object));
+    else if (dynamic_cast<THStack*>(object))
+      return getMaximum(dynamic_cast<THStack*>(object));
+
+    return std::numeric_limits<float>::lowest();
+  }
+
 };
 
 namespace YAML {

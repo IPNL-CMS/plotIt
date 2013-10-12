@@ -39,37 +39,6 @@ static Dummy foo;
 
 namespace plotIt {
 
-  template<class T>
-    void setAxisTitles(T* object, Plot& plot) {
-      if (plot.x_axis.length() > 0)
-        object->GetXaxis()->SetTitle(plot.x_axis.c_str());
-      if (plot.y_axis.length() > 0)
-        object->GetYaxis()->SetTitle(plot.y_axis.c_str());
-
-      object->GetYaxis()->SetTitleOffset(2);
-    }
-
-  void setAxisTitles(TObject* object, Plot& plot) {
-    if (dynamic_cast<TH1*>(object))
-      setAxisTitles(dynamic_cast<TH1*>(object), plot);
-    else if (dynamic_cast<THStack*>(object))
-      setAxisTitles(dynamic_cast<THStack*>(object), plot);
-  }
-
-  template<class T>
-    float getMaximum(T* object) {
-      return object->GetMaximum();
-    }
-
-  float getMaximum(TObject* object) {
-    if (dynamic_cast<TH1*>(object))
-      return getMaximum(dynamic_cast<TH1*>(object));
-    else if (dynamic_cast<THStack*>(object))
-      return getMaximum(dynamic_cast<THStack*>(object));
-
-    return std::numeric_limits<float>::lowest();
-  }
-
   plotIt::plotIt(const fs::path& outputPath, const std::string& configFile):
     m_outputPath(outputPath) {
 
@@ -426,30 +395,25 @@ namespace plotIt {
     // Build a THStack for MC files and a vector for signal
     float mcIntegral = 0;
     std::shared_ptr<THStack> mc_stack = std::make_shared<THStack>("mc_stack", "mc_stack");
-    std::vector<File> signals;
-    std::vector<File> datas;
+
+    std::shared_ptr<TH1> h_data;
+    std::string data_drawing_options;
+
+    std::vector<File> signal_files;
+
     for (File& file: m_files) {
       if (file.type == MC) {
         mc_stack->Add(dynamic_cast<TH1*>(file.object), file.drawing_options.c_str());
         mcIntegral += dynamic_cast<TH1*>(file.object)->Integral();
       } else if (file.type == SIGNAL) {
-        signals.push_back(file);
+        signal_files.push_back(file);
       } else if (file.type == DATA) {
-        datas.push_back(file);
-      }
-    }
-
-    std::shared_ptr<TH1> data;
-    std::string data_drawing_options;
-    if (datas.size()) {
-      for (File& d: datas) {
-        if (! data.get()) {
-          data.reset(dynamic_cast<TH1*>(d.object->Clone()));
-          data->SetDirectory(nullptr);
-          data_drawing_options = d.drawing_options;
-        }
-        else {
-          data->Add(dynamic_cast<TH1*>(d.object));
+        if (! h_data.get()) {
+          h_data.reset(dynamic_cast<TH1*>(file.object->Clone()));
+          h_data->SetDirectory(nullptr);
+          data_drawing_options += file.drawing_options;
+        } else {
+          h_data->Add(dynamic_cast<TH1*>(file.object));
         }
       }
     }
@@ -460,21 +424,19 @@ namespace plotIt {
         TH1* h = dynamic_cast<TH1*>(file.object);
         if (file.type == MC) {
           h->Scale(1. / mcIntegral);
-        } else {
+        } else if (file.type == SIGNAL) {
           h->Scale(1. / h->Integral());
         }
       }
 
-      if (data.get()) {
-        data->Scale(1. / data->Integral());
+      if (h_data.get()) {
+        h_data->Scale(1. / h_data->Integral());
       }
     }
 
     // Store all the histograms to draw, and find the one with the highest maximum
-    std::vector<
-      std::pair<TObject*, std::string>
-      > toDraw = { std::make_pair(mc_stack.get(), ""), std::make_pair(data.get(), data_drawing_options) };
-    for (File& signal: signals) {
+    std::vector<std::pair<TObject*, std::string>> toDraw = { std::make_pair(mc_stack.get(), ""), std::make_pair(h_data.get(), data_drawing_options) };
+    for (File& signal: signal_files) {
       toDraw.push_back(std::make_pair(signal.object, signal.drawing_options));
     }
 
@@ -482,10 +444,10 @@ namespace plotIt {
     toDraw.erase(
         std::remove_if(toDraw.begin(), toDraw.end(), [](std::pair<TObject*, std::string>& element) {
           return element.first == nullptr;
-        })
+        }), toDraw.end()
       );
 
-    // Sort files
+    // Sort objects by maximum
     std::sort(toDraw.begin(), toDraw.end(), [](std::pair<TObject*, std::string> a, std::pair<TObject*, std::string> b) {
         return getMaximum(a.first) > getMaximum(b.first);
       });
@@ -499,16 +461,16 @@ namespace plotIt {
     m_temporaryObjects.push_back(mc_stack);
 
     // Then signal
-    for (File& signal: signals) {
+    for (File& signal: signal_files) {
       std::string options = signal.drawing_options + " same";
       signal.object->Draw(options.c_str());
     }
 
     // And finally data
-    if (data.get()) {
+    if (h_data.get()) {
       data_drawing_options += " same";
-      data->Draw(data_drawing_options.c_str());
-      m_temporaryObjects.push_back(data);
+      h_data->Draw(data_drawing_options.c_str());
+      m_temporaryObjects.push_back(h_data);
     }
   }
 
