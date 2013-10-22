@@ -8,6 +8,10 @@
 #include <THStack.h>
 #include <TStyle.h>
 
+#include <vector>
+#include <string>
+#include <glob.h>
+
 namespace YAML {
   class Node;
 }
@@ -143,6 +147,7 @@ namespace plotIt {
 
       void plotTH1(TCanvas& c, Plot& plot);
 
+      bool expandFiles();
       bool expandObjects(File& file, std::vector<Plot>& plots);
       bool loadObject(File& file, const Plot& plot);
 
@@ -312,7 +317,58 @@ namespace plotIt {
     return std::numeric_limits<float>::lowest();
   }
 
+  template<class T>
+    float getMinimum(T* object) {
+      return object->GetMinimum();
+    }
+
+  float getMinimum(TObject* object) {
+    if (dynamic_cast<TH1*>(object))
+      return getMinimum(dynamic_cast<TH1*>(object));
+    else if (dynamic_cast<THStack*>(object))
+      return getMinimum(dynamic_cast<THStack*>(object));
+
+    return std::numeric_limits<float>::infinity();
+  }
+
+  template<class T>
+    void setMaximum(T* object, float minimum) {
+      object->SetMaximum(minimum);
+    }
+
+  void setMaximum(TObject* object, float minimum) {
+    if (dynamic_cast<TH1*>(object))
+      setMaximum(dynamic_cast<TH1*>(object), minimum);
+    else if (dynamic_cast<THStack*>(object))
+      setMaximum(dynamic_cast<THStack*>(object), minimum);
+  }
+
+  template<class T>
+    void setMinimum(T* object, float minimum) {
+      object->SetMinimum(minimum);
+    }
+
+  void setMinimum(TObject* object, float minimum) {
+    if (dynamic_cast<TH1*>(object))
+      setMinimum(dynamic_cast<TH1*>(object), minimum);
+    else if (dynamic_cast<THStack*>(object))
+      setMinimum(dynamic_cast<THStack*>(object), minimum);
+  }
+
 };
+
+inline std::vector<std::string> glob(const std::string& pat) {
+  glob_t glob_result;
+  glob(pat.c_str(), GLOB_TILDE, NULL, &glob_result);
+
+  std::vector<std::string> ret;
+  for(unsigned int i = 0;i < glob_result.gl_pathc; ++i){
+    ret.push_back(std::string(glob_result.gl_pathv[i]));
+  }
+
+  globfree(&glob_result);
+  return ret;
+}
 
 namespace YAML {
   template<>

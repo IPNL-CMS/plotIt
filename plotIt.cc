@@ -393,7 +393,7 @@ namespace plotIt {
     }
 
     // Build a THStack for MC files and a vector for signal
-    float mcIntegral = 0;
+    float mcWeight = 0;
     std::shared_ptr<THStack> mc_stack = std::make_shared<THStack>("mc_stack", "mc_stack");
 
     std::shared_ptr<TH1> h_data;
@@ -404,7 +404,7 @@ namespace plotIt {
     for (File& file: m_files) {
       if (file.type == MC) {
         mc_stack->Add(dynamic_cast<TH1*>(file.object), file.drawing_options.c_str());
-        mcIntegral += dynamic_cast<TH1*>(file.object)->Integral();
+        mcWeight += dynamic_cast<TH1*>(file.object)->GetSumOfWeights();
       } else if (file.type == SIGNAL) {
         signal_files.push_back(file);
       } else if (file.type == DATA) {
@@ -423,14 +423,14 @@ namespace plotIt {
       for (File& file: m_files) {
         TH1* h = dynamic_cast<TH1*>(file.object);
         if (file.type == MC) {
-          h->Scale(1. / mcIntegral);
+          h->Scale(1. / fabs(mcWeight));
         } else if (file.type == SIGNAL) {
-          h->Scale(1. / h->Integral());
+          h->Scale(1. / fabs(h->GetSumOfWeights()));
         }
       }
 
       if (h_data.get()) {
-        h_data->Scale(1. / h_data->Integral());
+        h_data->Scale(1. / h_data->GetSumOfWeights());
       }
     }
 
@@ -447,12 +447,24 @@ namespace plotIt {
         }), toDraw.end()
       );
 
+    // Sort object by minimum
+    std::sort(toDraw.begin(), toDraw.end(), [](std::pair<TObject*, std::string> a, std::pair<TObject*, std::string> b) {
+        return getMinimum(a.first) < getMinimum(b.first);
+      });
+
+    float minimum = getMinimum(toDraw[0].first);
+
     // Sort objects by maximum
     std::sort(toDraw.begin(), toDraw.end(), [](std::pair<TObject*, std::string> a, std::pair<TObject*, std::string> b) {
         return getMaximum(a.first) > getMaximum(b.first);
       });
 
+    float maximum = getMaximum(toDraw[0].first);
+
     toDraw[0].first->Draw(toDraw[0].second.c_str());
+    setMaximum(toDraw[0].first, maximum * 1.20);
+    setMinimum(toDraw[0].first, minimum * 1.20);
+
     // Set x and y axis titles
     setAxisTitles(toDraw[0].first, plot);
 
@@ -476,6 +488,8 @@ namespace plotIt {
 
   void plotIt::plotAll() {
     // First, explode plots to match all glob patterns
+
+    //expandFiles();
     std::vector<Plot> plots;
     if (! expandObjects(m_files[0], plots)) {
       return;
@@ -506,6 +520,25 @@ namespace plotIt {
     // Should not be possible!
     std::cout << "Error: object '" << plot.name << "' inheriting from '" << plot.inherits_from << "' not found in file '" << file.path << "'" << std::endl;
     return false;
+  }
+
+  bool plotIt::expandFiles() {
+    std::vector<File> files;
+
+    for (File& file: m_files) {
+      std::vector<std::string> matchedFiles = glob(file.path);
+      for (std::string& matchedFile: matchedFiles) {
+        File f = file;
+        f.path = matchedFile;
+        //std::cout << file.path << " matches to " << f.path << std::endl;
+
+        files.push_back(f);
+      }
+    }
+
+    m_files = files;
+
+    return true;
   }
 
   /**
