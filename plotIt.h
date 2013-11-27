@@ -31,6 +31,27 @@ namespace plotIt {
     DATA
   };
 
+  struct PlotStyle;
+  class plotIt;
+  struct Group;
+
+  struct Summary {
+    float n_events;
+    float n_events_error;
+
+    float efficiency;
+    float efficiency_error;
+
+    Summary() {
+      n_events = n_events_error = efficiency = efficiency_error = 0;
+    }
+
+    void clear() {
+      n_events = n_events_error = efficiency = efficiency_error = 0;
+    }
+  };
+
+
   struct File {
     std::string path;
 
@@ -42,12 +63,18 @@ namespace plotIt {
     // For Data
     float luminosity;
 
-    std::string legend;
-    std::string legend_style;
-
-    std::string drawing_options;
+    std::shared_ptr<PlotStyle> plot_style;
+    std::string group;
 
     Type type;
+
+    TObject* object;
+
+    int16_t order;
+    Summary summary;
+  };
+
+  struct PlotStyle {
 
     // Style
     float marker_size;
@@ -58,14 +85,27 @@ namespace plotIt {
     float line_width;
     int16_t line_color;
     int16_t line_type;
+    std::string drawing_options;
 
-    TObject* object;
+    // Legend
+    std::string legend;
+    std::string legend_style;
+
+    void loadFromYAML(YAML::Node& node, const File& file, plotIt& pIt);
+  };
+
+  struct Group {
+    std::string name;
+    std::shared_ptr<PlotStyle> plot_style;
+
+    bool added;
   };
 
   struct Plot {
     std::string name;
 
     bool normalized;
+    bool log_y;
 
     std::string x_axis;
     std::string y_axis;
@@ -73,6 +113,10 @@ namespace plotIt {
     std::vector<std::string> save_extensions;
 
     bool show_ratio;
+    bool fit_ratio = true;
+    std::string fit_function = "pol1";
+
+    bool show_errors;
 
     std::string inherits_from;
 
@@ -118,12 +162,35 @@ namespace plotIt {
   struct Configuration {
     float width;
     float height;
+    float luminosity;
+    float scale;
+
+    // Systematics
+    float luminosity_error_percent;
+
+    int16_t error_fill_color;
+    int16_t error_fill_style;
+
+    int16_t ratio_fit_line_color = 46;
+    int16_t ratio_fit_line_width = 1;
+    int16_t ratio_fit_line_style = 1;
+    int16_t ratio_fit_error_fill_color = 42;
+    int16_t ratio_fit_error_fill_style = 1001;
+
 
     std::string title;
     std::string parsed_title;
 
+    std::string root;
+
     Configuration() {
       width = height = 800;
+      root = "./";
+      luminosity = - 1;
+      scale = 1.;
+      luminosity_error_percent = 0;
+      error_fill_color = 42;
+      error_fill_style = 3154;
     }
   };
 
@@ -132,10 +199,12 @@ namespace plotIt {
       plotIt(const fs::path& outputPath, const std::string& configFile);
       void plotAll();
 
-      void setLuminosity(float luminosity) {
-        m_luminosity = luminosity;
-        parseTitle();
-      }
+      //void setLuminosity(float luminosity) {
+        //m_luminosity = luminosity;
+        //parseTitle();
+      //}
+
+      friend PlotStyle;
 
     private:
       void checkOrThrow(YAML::Node& node, const std::string& name, const std::string& file);
@@ -156,11 +225,13 @@ namespace plotIt {
       void addToLegend(TLegend& legend, Type type);
 
       void parseTitle();
+      std::shared_ptr<PlotStyle> getPlotStyle(File& file);
 
       fs::path m_outputPath;
 
       std::vector<File> m_files;
       std::vector<Plot> m_plots;
+      std::map<std::string, Group> m_groups;
 
       // Store objects in order to delete everything when drawing is done
       std::vector<std::shared_ptr<TObject>> m_temporaryObjects;
@@ -171,7 +242,7 @@ namespace plotIt {
       // Current style
       std::shared_ptr<TStyle> m_style;
 
-      float m_luminosity;
+      //float m_luminosity;
 
       Legend m_legend;
       Configuration m_config;
@@ -217,7 +288,7 @@ namespace plotIt {
 
     style->SetEndErrorSize(2);
     //  style->SetErrorMarker(20);
-    style->SetErrorX(0.);
+    //style->SetErrorX(0.);
 
     style->SetMarkerStyle(20);
 
@@ -281,6 +352,9 @@ namespace plotIt {
     style->SetOptLogy(0);
     style->SetOptLogz(0);
 
+    style->SetHatchesSpacing(1.3);
+    style->SetHatchesLineWidth(1);
+
     style->cd();
 
     return style;
@@ -294,6 +368,8 @@ namespace plotIt {
         object->GetYaxis()->SetTitle(plot.y_axis.c_str());
 
       object->GetYaxis()->SetTitleOffset(2);
+      if (plot.show_ratio)
+        object->GetXaxis()->SetLabelSize(0);
     }
 
   void setAxisTitles(TObject* object, Plot& plot) {
