@@ -110,10 +110,13 @@ namespace plotIt {
     std::string x_axis;
     std::string y_axis;
 
+    // Axis range
+    std::vector<float> x_axis_range;
+
     std::vector<std::string> save_extensions;
 
     bool show_ratio;
-    bool fit_ratio = true;
+    bool fit_ratio = false;
     std::string fit_function = "pol1";
 
     bool show_errors;
@@ -429,6 +432,21 @@ namespace plotIt {
       setMinimum(dynamic_cast<TH1*>(object), minimum);
     else if (dynamic_cast<THStack*>(object))
       setMinimum(dynamic_cast<THStack*>(object), minimum);
+  }
+
+  template<class T>
+    void setRange(T* object, Plot& plot) {
+      object->GetXaxis()->SetRangeUser(plot.x_axis_range[0], plot.x_axis_range[1]);
+    }
+
+  void setRange(TObject* object, Plot& plot) {
+    if (plot.x_axis_range.size() != 2)
+      return;
+
+    if (dynamic_cast<TH1*>(object))
+      setRange(dynamic_cast<TH1*>(object), plot);
+    else if (dynamic_cast<THStack*>(object))
+      setRange(dynamic_cast<THStack*>(object)->GetHistogram(), plot);
   }
 
 };

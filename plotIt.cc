@@ -253,10 +253,19 @@ namespace plotIt {
       else
         plot.show_ratio = false;
 
+      if (node["fit-ratio"])
+        plot.fit_ratio = node["fit-ratio"].as<bool>();
+
+      if (node["fit-function"])
+        plot.fit_function = node["fit-function"].as<std::string>();
+
       if (node["show-errors"])
         plot.show_errors = node["show-errors"].as<bool>();
       else
         plot.show_errors = false;
+
+      if (node["x-axis-range"])
+        plot.x_axis_range = node["x-axis-range"].as<std::vector<float>>();
 
       if (node["inherits-from"])
         plot.inherits_from = node["inherits-from"].as<std::string>();
@@ -388,8 +397,15 @@ namespace plotIt {
       }
 
       if (sum_n_events) {
+        float systematics = 0;
+        if (type == MC && m_config.luminosity_error_percent > 0) {
+          std::cout << "------------------------------------------" << std::endl;
+          std::cout << "Systematic uncertainties" << std::endl;
+          printf("%50s%18.2f ± %10.2f\n", "Luminosity", sum_n_events, sum_n_events * m_config.luminosity_error_percent);
+          systematics = sum_n_events * m_config.luminosity_error_percent;
+        }
         std::cout << "------------------------------------------" << std::endl;
-        printf("%50s%18.2f ± %10.2f\n", " ", sum_n_events, sqrt(sum_n_events_error));
+        printf("%50s%18.2f ± %10.2f\n", " ", sum_n_events, sqrt(sum_n_events_error + systematics * systematics));
       }
     };
 
@@ -554,7 +570,7 @@ namespace plotIt {
     if (plot.show_errors) {
       if (m_config.luminosity_error_percent > 0) {
         // Loop over all bins, and add lumi error
-        for (uint32_t i = 1; i <= mc_histo->GetNbinsX(); i++) {
+        for (uint32_t i = 1; i <= (uint32_t) mc_histo->GetNbinsX(); i++) {
           float error = mc_histo->GetBinError(i);
           float entries = mc_histo->GetBinContent(i);
           float lumi_error = entries * m_config.luminosity_error_percent;
@@ -591,6 +607,9 @@ namespace plotIt {
 
     float maximum = getMaximum(toDraw[0].first);
 
+    if (! h_data.get())
+      plot.show_ratio = false;
+
     std::shared_ptr<TPad> hi_pad;
     std::shared_ptr<TPad> low_pad;
     if (plot.show_ratio) {
@@ -614,6 +633,7 @@ namespace plotIt {
     }
 
     toDraw[0].first->Draw(toDraw[0].second.c_str());
+    setRange(toDraw[0].first, plot);
 
     float safe_margin = 1.20;
     if (plot.log_y)
@@ -682,7 +702,6 @@ namespace plotIt {
 
       h_data_cloned->Draw("e X0");
 
-      //FIXME
       if (plot.fit_ratio) {
         float xMin = h_data_cloned->GetXaxis()->GetBinLowEdge(1);
         float xMax = h_data_cloned->GetXaxis()->GetBinUpEdge(h_data_cloned->GetXaxis()->GetLast());
@@ -719,7 +738,7 @@ namespace plotIt {
     gPad->Update();
     gPad->RedrawAxis();
 
-    if (plot.show_ratio)
+    if (hi_pad.get())
       hi_pad->cd();
   }
 
