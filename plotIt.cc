@@ -190,9 +190,9 @@ namespace plotIt {
         file.branching_ratio = 1;
 
       if (node["generated-events"])
-        file.generated_events = node["generated-events"].as<uint64_t>();
+        file.generated_events = node["generated-events"].as<float>();
       else
-        file.generated_events = 1;
+        file.generated_events = 1.;
 
       file.order = 0;
       if (node["order"])

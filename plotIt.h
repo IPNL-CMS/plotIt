@@ -58,7 +58,7 @@ namespace plotIt {
     // For MC and Signal
     float cross_section;
     float branching_ratio;
-    uint64_t generated_events;
+    float generated_events;
 
     // For Data
     float luminosity;
