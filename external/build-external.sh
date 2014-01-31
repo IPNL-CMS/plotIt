@@ -2,7 +2,7 @@
 
 # YAML
 
-wget --no-check-certificate https://yaml-cpp.googlecode.com/files/yaml-cpp-0.5.1.tar.gz
+curl -O https://yaml-cpp.googlecode.com/files/yaml-cpp-0.5.1.tar.gz
 tar xf yaml-cpp-0.5.1.tar.gz
 
 cd yaml-cpp-0.5.1
@@ -18,7 +18,7 @@ cd ../..
 rm yaml-cpp-0.5.1.tar.gz
 
 # TCLAP
-wget http://optimate.dl.sourceforge.net/project/tclap/tclap-1.2.1.tar.gz
+curl -O http://optimate.dl.sourceforge.net/project/tclap/tclap-1.2.1.tar.gz
 tar xf tclap-1.2.1.tar.gz
 
 cd tclap-1.2.1
