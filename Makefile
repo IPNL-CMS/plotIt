@@ -26,7 +26,7 @@ SOFLAGS		    =
 AR            = ar
 ARFLAGS       = -cq
 
-CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../include/ -Iexternal/include/ -I$(shell echo $(BOOST_ROOT))/include
+CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -Iexternal/include/ -I$(shell echo $(BOOST_ROOT))/include
 LIBS  		    = $(ROOTLIBS) -lboost_filesystem -lboost_regex
 GLIBS	    	  = $(ROOTGLIBS)
 #------------------------------------------------------------------------------
