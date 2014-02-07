@@ -668,7 +668,7 @@ namespace plotIt {
     }
 
     // Then, if requested, errors
-    if (plot.show_errors) {
+    if (mc_histo.get() && plot.show_errors) {
       mc_histo->SetMarkerSize(0);
       mc_histo->SetMarkerStyle(0);
       mc_histo->SetFillStyle(m_config.error_fill_style);
