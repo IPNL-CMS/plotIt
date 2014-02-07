@@ -551,6 +551,15 @@ namespace plotIt {
       }
     }
 
+    if ((h_data.get()) && !h_data->GetEntries())
+      h_data.reset();
+
+    if ((mc_histo.get() && !mc_histo->GetEntries()))
+      mc_histo.reset();
+
+    if ((! mc_stack->GetStack()->GetEntriesFast()))
+      mc_stack.reset();
+
     if (plot.normalized) {
       // Normalized each plot
       for (File& file: m_files) {
@@ -567,7 +576,7 @@ namespace plotIt {
       }
     }
 
-    if (plot.show_errors) {
+    if (mc_histo.get() && plot.show_errors) {
       if (m_config.luminosity_error_percent > 0) {
         // Loop over all bins, and add lumi error
         for (uint32_t i = 1; i <= (uint32_t) mc_histo->GetNbinsX(); i++) {
@@ -593,6 +602,11 @@ namespace plotIt {
         }), toDraw.end()
       );
 
+    if (!toDraw.size()) {
+      std::cerr << "Error: nothing to draw." << std::endl;
+      return;
+    };
+
     // Sort object by minimum
     std::sort(toDraw.begin(), toDraw.end(), [](std::pair<TObject*, std::string> a, std::pair<TObject*, std::string> b) {
         return getMinimum(a.first) < getMinimum(b.first);
@@ -607,7 +621,7 @@ namespace plotIt {
 
     float maximum = getMaximum(toDraw[0].first);
 
-    if (! h_data.get())
+    if ((!h_data.get() || !mc_histo.get()))
       plot.show_ratio = false;
 
     std::shared_ptr<TPad> hi_pad;
@@ -648,8 +662,10 @@ namespace plotIt {
     setAxisTitles(toDraw[0].first, plot);
 
     // First, draw MC
-    mc_stack->Draw("same");
-    m_temporaryObjects.push_back(mc_stack);
+    if (mc_stack.get()) {
+      mc_stack->Draw("same");
+      m_temporaryObjects.push_back(mc_stack);
+    }
 
     // Then, if requested, errors
     if (plot.show_errors) {
