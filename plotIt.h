@@ -217,7 +217,7 @@ namespace plotIt {
       // Plot method
       bool plot(Plot& plot);
 
-      void plotTH1(TCanvas& c, Plot& plot);
+      bool plotTH1(TCanvas& c, Plot& plot);
 
       bool expandFiles();
       bool expandObjects(File& file, std::vector<Plot>& plots);

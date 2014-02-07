@@ -377,8 +377,9 @@ namespace plotIt {
     // Create canvas
     TCanvas c("canvas", "canvas", m_config.width, m_config.height);
 
+    bool success = false;
     if (m_files[0].object->InheritsFrom("TH1")) {
-      plotTH1(c, plot);
+      success = plotTH1(c, plot);
     }
 
     auto printSummary = [&](Type type) {
@@ -408,6 +409,9 @@ namespace plotIt {
         printf("%50s%18.2f ± %10.2f\n", " ", sum_n_events, sqrt(sum_n_events_error + systematics * systematics));
       }
     };
+
+    if (! success)
+      return false;
 
     std::cout << "Summary: " << std::endl;
 
@@ -490,7 +494,7 @@ namespace plotIt {
     return true;
   }
 
-  void plotIt::plotTH1(TCanvas& c, Plot& plot) {
+  bool plotIt::plotTH1(TCanvas& c, Plot& plot) {
     c.cd();
 
     // Rescale and style histograms
@@ -551,14 +555,13 @@ namespace plotIt {
       }
     }
 
-    if ((h_data.get()) && !h_data->GetEntries())
+    if ((h_data.get()) && !h_data->GetSumOfWeights())
       h_data.reset();
 
-    if ((mc_histo.get() && !mc_histo->GetEntries()))
+    if ((mc_histo.get() && !mc_histo->GetSumOfWeights())) {
       mc_histo.reset();
-
-    if ((! mc_stack->GetStack()->GetEntriesFast()))
       mc_stack.reset();
+    }
 
     if (plot.normalized) {
       // Normalized each plot
@@ -604,7 +607,7 @@ namespace plotIt {
 
     if (!toDraw.size()) {
       std::cerr << "Error: nothing to draw." << std::endl;
-      return;
+      return false;
     };
 
     // Sort object by minimum
@@ -655,8 +658,10 @@ namespace plotIt {
 
     setMaximum(toDraw[0].first, maximum * safe_margin);
 
-    if (!plot.log_y)
-      setMinimum(toDraw[0].first, minimum * 1.20);
+    if (minimum <= 0 && plot.log_y) {
+      minimum = 0.1;
+    }
+    setMinimum(toDraw[0].first, minimum * 1.20);
 
     // Set x and y axis titles
     setAxisTitles(toDraw[0].first, plot);
@@ -756,6 +761,8 @@ namespace plotIt {
 
     if (hi_pad.get())
       hi_pad->cd();
+
+    return true;
   }
 
   void plotIt::plotAll() {
