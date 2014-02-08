@@ -736,7 +736,7 @@ namespace plotIt {
         float xMax = h_data_cloned->GetXaxis()->GetBinUpEdge(h_data_cloned->GetXaxis()->GetLast());
         std::shared_ptr<TF1> fct = std::make_shared<TF1>("fit_function", plot.fit_function.c_str(), xMin, xMax);
 
-        h_data_cloned->Fit(fct.get(), "MRNE");
+        h_data_cloned->Fit(fct.get(), "MRNEQ");
 
         std::shared_ptr<TH1> errors = std::make_shared<TH1D>("errors", "errors", 100, xMin, xMax);
         errors->SetDirectory(nullptr);
