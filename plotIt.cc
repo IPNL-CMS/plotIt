@@ -12,6 +12,7 @@
 #include <TFile.h>
 #include <TKey.h>
 #include <THStack.h>
+#include <TLatex.h>
 #include <TLegend.h>
 #include <TLegendEntry.h>
 #include <TPaveText.h>
@@ -30,6 +31,7 @@
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 
 namespace fs = boost::filesystem;
 using std::setw;
@@ -258,6 +260,12 @@ namespace plotIt {
 
       if (node["fit-function"])
         plot.fit_function = node["fit-function"].as<std::string>();
+
+      if (node["fit-legend"])
+        plot.fit_legend = node["fit-legend"].as<std::string>();
+
+      if (node["fit-legend-position"])
+        plot.fit_legend_position = node["fit-legend-position"].as<Point>();
 
       if (node["show-errors"])
         plot.show_errors = node["show-errors"].as<bool>();
@@ -743,6 +751,28 @@ namespace plotIt {
         fct->SetLineColor(m_config.ratio_fit_line_color);
         fct->SetLineStyle(m_config.ratio_fit_line_style);
         fct->Draw("same");
+
+        if (plot.fit_legend.length() > 0) {
+          using namespace boost::io;
+          uint32_t fit_parameters = fct->GetNpar();
+          boost::format formatter(plot.fit_legend);
+          formatter.exceptions( all_error_bits ^ ( too_many_args_bit | too_few_args_bit )  );
+
+          for (uint32_t i = 0; i < fit_parameters; i++) {
+            formatter % fct->GetParameter(i);
+          }
+
+          std::string legend = formatter.str();
+
+          std::shared_ptr<TLatex> t(new TLatex(plot.fit_legend_position.x, plot.fit_legend_position.y, legend.c_str()));
+          t->SetNDC(true);
+          t->SetTextFont(42);
+          t->SetTextSize(0.07);
+          t->Draw();
+
+          m_temporaryObjects.push_back(t);
+        }
+
 
         m_temporaryObjects.push_back(errors);
         m_temporaryObjects.push_back(fct);

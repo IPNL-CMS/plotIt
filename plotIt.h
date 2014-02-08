@@ -101,6 +101,18 @@ namespace plotIt {
     bool added;
   };
 
+  struct Point {
+    float x;
+    float y;
+
+    bool operator==(const Point& other) {
+      return
+        (fabs(x - other.x) < 1e-6) &&
+        (fabs(y - other.y) < 1e-6);
+    }
+  };
+
+
   struct Plot {
     std::string name;
 
@@ -118,6 +130,8 @@ namespace plotIt {
     bool show_ratio;
     bool fit_ratio = false;
     std::string fit_function = "pol1";
+    std::string fit_legend;
+    Point fit_legend_position = {0.20, 0.38};
 
     bool show_errors;
 
@@ -485,6 +499,27 @@ namespace YAML {
         rhs.y1 = node[1].as<float>();
         rhs.x2 = node[2].as<float>();
         rhs.y2 = node[2].as<float>();
+
+        return true;
+      }
+    };
+
+  template<>
+    struct convert<plotIt::Point> {
+      static Node encode(const plotIt::Point& rhs) {
+        Node node;
+        node.push_back(rhs.x);
+        node.push_back(rhs.y);
+
+        return node;
+      }
+
+      static bool decode(const Node& node, plotIt::Point& rhs) {
+        if(!node.IsSequence() || node.size() != 2)
+          return false;
+
+        rhs.x = node[0].as<float>();
+        rhs.y = node[1].as<float>();
 
         return true;
       }
