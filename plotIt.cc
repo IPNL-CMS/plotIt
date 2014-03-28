@@ -208,6 +208,13 @@ namespace plotIt {
         }
       }
 
+      file.systematics_object = nullptr;
+      if (node["systematics"]) {
+        file.systematics = node["systematics"].as<std::string>();
+        path = fs::path(file.systematics);
+        file.systematics = (root / path).string();
+      }
+
       if (file.group.length() == 0) {
         file.plot_style = std::make_shared<PlotStyle>();
         file.plot_style->loadFromYAML(node, file, *this);
@@ -598,6 +605,21 @@ namespace plotIt {
           mc_histo->SetBinError(i, std::sqrt(error * error + lumi_error * lumi_error));
         }
       }
+
+      // Check if systematic histogram are attached, and add them to the plot
+      for (File& file: m_files) {
+        if (! file.systematics_object || file.type != MC)
+          continue;
+
+        file.systematics_object->Print("v");
+        TH1* h = dynamic_cast<TH1*>(file.systematics_object);
+        for (uint32_t i = 1; i <= (uint32_t) mc_histo->GetNbinsX(); i++) {
+          float error = mc_histo->GetBinError(i);
+          float syst_error = h->GetBinError(i);
+
+          mc_histo->SetBinError(i, std::sqrt(error * error + syst_error * syst_error));
+        }
+      }
     }
 
     // Store all the histograms to draw, and find the one with the highest maximum
@@ -822,6 +844,17 @@ namespace plotIt {
     if (obj) {
       m_temporaryObjects.push_back(input);
       file.object = obj;
+
+      if (file.systematics.length() > 0) {
+        std::shared_ptr<TFile> syst_input(TFile::Open(file.systematics.c_str()));
+        if (syst_input.get()) {
+          obj = syst_input->Get(plot.name.c_str());
+          if (obj) {
+            file.systematics_object = obj;
+            m_temporaryObjects.push_back(syst_input);
+          }
+        }
+      }
 
       return true;
     }

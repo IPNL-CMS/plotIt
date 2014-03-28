@@ -68,6 +68,9 @@ namespace plotIt {
 
     Type type;
 
+    std::string systematics; // Root file containing systematic uncertainainties shapes
+    TObject* systematics_object;
+
     TObject* object;
 
     int16_t order;
