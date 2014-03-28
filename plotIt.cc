@@ -611,7 +611,6 @@ namespace plotIt {
         if (! file.systematics_object || file.type != MC)
           continue;
 
-        file.systematics_object->Print("v");
         TH1* h = dynamic_cast<TH1*>(file.systematics_object);
         for (uint32_t i = 1; i <= (uint32_t) mc_histo->GetNbinsX(); i++) {
           float error = mc_histo->GetBinError(i);
@@ -845,7 +844,7 @@ namespace plotIt {
       m_temporaryObjects.push_back(input);
       file.object = obj;
 
-      if (file.systematics.length() > 0) {
+      if (file.systematics.length() > 0 && boost::filesystem::exists(file.systematics)) {
         std::shared_ptr<TFile> syst_input(TFile::Open(file.systematics.c_str()));
         if (syst_input.get()) {
           obj = syst_input->Get(plot.name.c_str());
