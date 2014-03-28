@@ -196,7 +196,7 @@ namespace plotIt {
       else
         file.generated_events = 1.;
 
-      file.order = 0;
+      file.order = std::numeric_limits<int16_t>::min();
       if (node["order"])
         file.order = node["order"].as<int16_t>();
 
