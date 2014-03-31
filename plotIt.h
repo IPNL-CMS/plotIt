@@ -28,7 +28,8 @@ namespace plotIt {
   enum Type {
     MC,
     SIGNAL,
-    DATA
+    DATA,
+    SYST
   };
 
   struct PlotStyle;
@@ -67,9 +68,6 @@ namespace plotIt {
     std::string group;
 
     Type type;
-
-    std::string systematics; // Root file containing systematic uncertainainties shapes
-    TObject* systematics_object;
 
     TObject* object;
 

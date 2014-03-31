@@ -176,6 +176,8 @@ namespace plotIt {
           file.type = SIGNAL;
         else if (type == "data")
           file.type = DATA;
+        else if (type == "syst")
+          file.type = SYST;
         else
           file.type = MC;
       } else
@@ -208,11 +210,24 @@ namespace plotIt {
         }
       }
 
-      file.systematics_object = nullptr;
       if (node["systematics"]) {
-        file.systematics = node["systematics"].as<std::string>();
-        path = fs::path(file.systematics);
-        file.systematics = (root / path).string();
+        std::string systematics = node["systematics"].as<std::string>();
+        path = fs::path(systematics);
+        systematics = (root / path).string();
+
+        if (boost::filesystem::exists(systematics)) {
+          File syst;
+          syst.cross_section = file.cross_section;
+          syst.generated_events = file.generated_events;
+          syst.branching_ratio = file.branching_ratio;
+          syst.path = file.path;
+
+          syst.type = SYST;
+
+          m_files.push_back(syst);
+        } else {
+          std::cerr << "Warning: systematics file '" << systematics << "' not found." << std::endl;
+        }
       }
 
       if (file.group.length() == 0) {
@@ -324,6 +339,9 @@ namespace plotIt {
   }
 
   void plotIt::setTHStyle(File& file) {
+    if (file.type == SYST)
+      return;
+
     TH1* h = dynamic_cast<TH1*>(file.object);
 
     std::shared_ptr<PlotStyle> style = getPlotStyle(file);
@@ -383,10 +401,12 @@ namespace plotIt {
         return false;
       }
 
-      hasLegend |= getPlotStyle(file)->legend.length() > 0;
-      hasData |= file.type == DATA;
-      hasMC |= file.type == MC;
-      hasSignal |= file.type == SIGNAL;
+      if (file.type != SYST) {
+        hasLegend |= getPlotStyle(file)->legend.length() > 0;
+        hasData |= file.type == DATA;
+        hasMC |= file.type == MC;
+        hasSignal |= file.type == SIGNAL;
+      }
     }
 
     // Create canvas
@@ -608,10 +628,10 @@ namespace plotIt {
 
       // Check if systematic histogram are attached, and add them to the plot
       for (File& file: m_files) {
-        if (! file.systematics_object || file.type != MC)
+        if (file.type != SYST)
           continue;
 
-        TH1* h = dynamic_cast<TH1*>(file.systematics_object);
+        TH1* h = dynamic_cast<TH1*>(file.object);
         for (uint32_t i = 1; i <= (uint32_t) mc_histo->GetNbinsX(); i++) {
           float error = mc_histo->GetBinError(i);
           float syst_error = h->GetBinError(i);
@@ -748,9 +768,12 @@ namespace plotIt {
       h_data_cloned->GetYaxis()->SetLabelSize(0.07);
       h_data_cloned->GetXaxis()->SetTitleSize(0.09);
       h_data_cloned->GetYaxis()->SetTitleSize(0.08);
-      h_data_cloned->GetYaxis()->SetNdivisions(505,true);
+      h_data_cloned->GetYaxis()->SetNdivisions(505, true);
 
-      h_data_cloned->Draw("e X0");
+      h_data_cloned->SetFillStyle(m_config.error_fill_style);
+      h_data_cloned->SetFillColor(m_config.error_fill_color);
+      h_data_cloned->Draw("E2");
+      h_data_cloned->Draw("P X0 same");
 
       if (plot.fit_ratio) {
         float xMin = h_data_cloned->GetXaxis()->GetBinLowEdge(1);
@@ -794,12 +817,11 @@ namespace plotIt {
           m_temporaryObjects.push_back(t);
         }
 
-
         m_temporaryObjects.push_back(errors);
         m_temporaryObjects.push_back(fct);
       }
 
-      h_data_cloned->Draw("e X0 same");
+      h_data_cloned->Draw("P X0 same");
 
       m_temporaryObjects.push_back(h_data_cloned);
       m_temporaryObjects.push_back(hi_pad);
@@ -843,17 +865,6 @@ namespace plotIt {
     if (obj) {
       m_temporaryObjects.push_back(input);
       file.object = obj;
-
-      if (file.systematics.length() > 0 && boost::filesystem::exists(file.systematics)) {
-        std::shared_ptr<TFile> syst_input(TFile::Open(file.systematics.c_str()));
-        if (syst_input.get()) {
-          obj = syst_input->Get(plot.name.c_str());
-          if (obj) {
-            file.systematics_object = obj;
-            m_temporaryObjects.push_back(syst_input);
-          }
-        }
-      }
 
       return true;
     }
