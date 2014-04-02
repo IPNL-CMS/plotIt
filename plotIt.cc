@@ -52,6 +52,7 @@ namespace plotIt {
   plotIt::plotIt(const fs::path& outputPath, const std::string& configFile):
     m_outputPath(outputPath) {
 
+      gErrorIgnoreLevel = kError;
       m_style.reset(createStyle());
       parseConfigurationFile(configFile);
     }
@@ -176,8 +177,6 @@ namespace plotIt {
           file.type = SIGNAL;
         else if (type == "data")
           file.type = DATA;
-        else if (type == "syst")
-          file.type = SYST;
         else
           file.type = MC;
       } else
@@ -211,22 +210,28 @@ namespace plotIt {
       }
 
       if (node["systematics"]) {
-        std::string systematics = node["systematics"].as<std::string>();
-        path = fs::path(systematics);
-        systematics = (root / path).string();
 
-        if (boost::filesystem::exists(systematics)) {
-          File syst;
-          syst.cross_section = file.cross_section;
-          syst.generated_events = file.generated_events;
-          syst.branching_ratio = file.branching_ratio;
-          syst.path = file.path;
+        const auto& addSystematic = [&root, &file](const std::string& systematics) {
+          fs::path path = fs::path(systematics);
+          std::string fullPath = (root / path).string();
 
-          syst.type = SYST;
+          if (boost::filesystem::exists(fullPath)) {
+            Systematic s;
+            s.path = fullPath;
 
-          m_files.push_back(syst);
+            file.systematics.push_back(s);
+          } else {
+            std::cerr << "Warning: systematics file '" << systematics << "' not found." << std::endl;
+          }
+        };
+
+        const YAML::Node& syst = node["systematics"];
+        if (syst.IsSequence()) {
+          for (const auto& it: syst) {
+            addSystematic(it.as<std::string>());
+          }
         } else {
-          std::cerr << "Warning: systematics file '" << systematics << "' not found." << std::endl;
+          addSystematic(syst.as<std::string>());
         }
       }
 
@@ -339,9 +344,6 @@ namespace plotIt {
   }
 
   void plotIt::setTHStyle(File& file) {
-    if (file.type == SYST)
-      return;
-
     TH1* h = dynamic_cast<TH1*>(file.object);
 
     std::shared_ptr<PlotStyle> style = getPlotStyle(file);
@@ -401,12 +403,10 @@ namespace plotIt {
         return false;
       }
 
-      if (file.type != SYST) {
-        hasLegend |= getPlotStyle(file)->legend.length() > 0;
-        hasData |= file.type == DATA;
-        hasMC |= file.type == MC;
-        hasSignal |= file.type == SIGNAL;
-      }
+      hasLegend |= getPlotStyle(file)->legend.length() > 0;
+      hasData |= file.type == DATA;
+      hasMC |= file.type == MC;
+      hasSignal |= file.type == SIGNAL;
     }
 
     // Create canvas
@@ -437,8 +437,18 @@ namespace plotIt {
         if (type == MC && m_config.luminosity_error_percent > 0) {
           std::cout << "------------------------------------------" << std::endl;
           std::cout << "Systematic uncertainties" << std::endl;
-          printf("%50s%18.2f ± %10.2f\n", "Luminosity", sum_n_events, sum_n_events * m_config.luminosity_error_percent);
+          printf("%50s%18s ± %10.2f\n", "Luminosity", " ", sum_n_events * m_config.luminosity_error_percent);
           systematics = sum_n_events * m_config.luminosity_error_percent;
+        }
+        for (File& file: m_files) {
+          if (file.type == type) {
+            for (Systematic& s: file.systematics) {
+              fs::path path(s.path);
+              printf("%50s%18s ± %10.2f\n", path.stem().c_str(), " ", s.summary.n_events_error);
+
+              sum_n_events_error += s.summary.n_events_error * s.summary.n_events_error;
+            }
+          }
         }
         std::cout << "------------------------------------------" << std::endl;
         printf("%50s%18.2f ± %10.2f\n", " ", sum_n_events, sqrt(sum_n_events_error + systematics * systematics));
@@ -555,12 +565,19 @@ namespace plotIt {
       }
 
       h->Rebin(plot.rebin);
+
+      for (Systematic& s: file.systematics) {
+        TH1* syst = static_cast<TH1*>(s.object);
+        syst->Rebin(plot.rebin);
+      }
     }
 
     // Build a THStack for MC files and a vector for signal
     float mcWeight = 0;
     std::shared_ptr<THStack> mc_stack = std::make_shared<THStack>("mc_stack", "mc_stack");
-    std::shared_ptr<TH1> mc_histo;
+    std::shared_ptr<TH1> mc_histo_stat_only;
+    std::shared_ptr<TH1> mc_histo_syst_only;
+    std::shared_ptr<TH1> mc_histo_stat_syst;
 
     std::shared_ptr<TH1> h_data;
     std::string data_drawing_options;
@@ -570,11 +587,11 @@ namespace plotIt {
     for (File& file: m_files) {
       if (file.type == MC) {
         mc_stack->Add(dynamic_cast<TH1*>(file.object), getPlotStyle(file)->drawing_options.c_str());
-        if (mc_histo.get()) {
-          mc_histo->Add(dynamic_cast<TH1*>(file.object));
+        if (mc_histo_stat_only.get()) {
+          mc_histo_stat_only->Add(dynamic_cast<TH1*>(file.object));
         } else {
-          mc_histo.reset( static_cast<TH1*>(dynamic_cast<TH1*>(file.object)->Clone()) );
-          mc_histo->SetDirectory(nullptr);
+          mc_histo_stat_only.reset( static_cast<TH1*>(dynamic_cast<TH1*>(file.object)->Clone()) );
+          mc_histo_stat_only->SetDirectory(nullptr);
         }
         mcWeight += dynamic_cast<TH1*>(file.object)->GetSumOfWeights();
       } else if (file.type == SIGNAL) {
@@ -593,8 +610,8 @@ namespace plotIt {
     if ((h_data.get()) && !h_data->GetSumOfWeights())
       h_data.reset();
 
-    if ((mc_histo.get() && !mc_histo->GetSumOfWeights())) {
-      mc_histo.reset();
+    if ((mc_histo_stat_only.get() && !mc_histo_stat_only->GetSumOfWeights())) {
+      mc_histo_stat_only.reset();
       mc_stack.reset();
     }
 
@@ -614,30 +631,62 @@ namespace plotIt {
       }
     }
 
-    if (mc_histo.get() && plot.show_errors) {
+    if (mc_histo_stat_only.get()) {
+      mc_histo_syst_only.reset(static_cast<TH1*>(mc_histo_stat_only->Clone()));
+      mc_histo_syst_only->SetDirectory(nullptr);
+      mc_histo_stat_syst.reset(static_cast<TH1*>(mc_histo_stat_only->Clone()));
+      mc_histo_stat_syst->SetDirectory(nullptr);
+
+      // Clear statistical errors
+      for (uint32_t i = 1; i <= (uint32_t) mc_histo_syst_only->GetNbinsX(); i++) {
+        mc_histo_syst_only->SetBinError(i, 0);
+      }
+    }
+
+    if (mc_histo_syst_only.get() && plot.show_errors) {
       if (m_config.luminosity_error_percent > 0) {
         // Loop over all bins, and add lumi error
-        for (uint32_t i = 1; i <= (uint32_t) mc_histo->GetNbinsX(); i++) {
-          float error = mc_histo->GetBinError(i);
-          float entries = mc_histo->GetBinContent(i);
+        for (uint32_t i = 1; i <= (uint32_t) mc_histo_syst_only->GetNbinsX(); i++) {
+          float error = mc_histo_syst_only->GetBinError(i);
+          float entries = mc_histo_syst_only->GetBinContent(i);
           float lumi_error = entries * m_config.luminosity_error_percent;
 
-          mc_histo->SetBinError(i, std::sqrt(error * error + lumi_error * lumi_error));
+          mc_histo_syst_only->SetBinError(i, std::sqrt(error * error + lumi_error * lumi_error));
         }
       }
 
       // Check if systematic histogram are attached, and add them to the plot
       for (File& file: m_files) {
-        if (file.type != SYST)
+        if (file.type != MC || file.systematics.size() == 0)
           continue;
 
-        TH1* h = dynamic_cast<TH1*>(file.object);
-        for (uint32_t i = 1; i <= (uint32_t) mc_histo->GetNbinsX(); i++) {
-          float error = mc_histo->GetBinError(i);
-          float syst_error = h->GetBinError(i);
+        TH1* nominal = dynamic_cast<TH1*>(file.object);
 
-          mc_histo->SetBinError(i, std::sqrt(error * error + syst_error * syst_error));
+        for (Systematic& syst: file.systematics) {
+          // This histogram should contains syst errors
+          // in percent
+          float total_syst_error = 0;
+          TH1* h = dynamic_cast<TH1*>(syst.object);
+          for (uint32_t i = 1; i <= (uint32_t) mc_histo_syst_only->GetNbinsX(); i++) {
+            float total_error = mc_histo_syst_only->GetBinError(i);
+            float syst_error_percent = h->GetBinError(i);
+            float nominal_value = nominal->GetBinContent(i);
+            float syst_error = nominal_value * syst_error_percent;
+            total_syst_error += syst_error;
+
+            mc_histo_syst_only->SetBinError(i, std::sqrt(total_error * total_error + syst_error * syst_error));
+          }
+
+          syst.summary.n_events = file.summary.n_events;
+          syst.summary.n_events_error = total_syst_error;
         }
+      }
+
+      // Propagate syst errors to the stat + syst histogram
+      for (uint32_t i = 1; i <= (uint32_t) mc_histo_syst_only->GetNbinsX(); i++) {
+        float syst_error = mc_histo_syst_only->GetBinError(i);
+        float stat_error = mc_histo_stat_only->GetBinError(i);
+        mc_histo_stat_syst->SetBinError(i, std::sqrt(syst_error * syst_error + stat_error * stat_error));
       }
     }
 
@@ -673,7 +722,7 @@ namespace plotIt {
 
     float maximum = getMaximum(toDraw[0].first);
 
-    if ((!h_data.get() || !mc_histo.get()))
+    if ((!h_data.get() || !mc_histo_stat_only.get()))
       plot.show_ratio = false;
 
     std::shared_ptr<TPad> hi_pad;
@@ -722,14 +771,14 @@ namespace plotIt {
     }
 
     // Then, if requested, errors
-    if (mc_histo.get() && plot.show_errors) {
-      mc_histo->SetMarkerSize(0);
-      mc_histo->SetMarkerStyle(0);
-      mc_histo->SetFillStyle(m_config.error_fill_style);
-      mc_histo->SetFillColor(m_config.error_fill_color);
+    if (mc_histo_stat_syst.get() && plot.show_errors) {
+      mc_histo_stat_syst->SetMarkerSize(0);
+      mc_histo_stat_syst->SetMarkerStyle(0);
+      mc_histo_stat_syst->SetFillStyle(m_config.error_fill_style);
+      mc_histo_stat_syst->SetFillColor(m_config.error_fill_color);
 
-      mc_histo->Draw("E2 same");
-      m_temporaryObjects.push_back(mc_histo);
+      mc_histo_stat_syst->Draw("E2 same");
+      m_temporaryObjects.push_back(mc_histo_stat_syst);
     }
 
     // Then signal
@@ -755,9 +804,9 @@ namespace plotIt {
 
       std::shared_ptr<TH1> h_data_cloned(static_cast<TH1*>(h_data->Clone()));
       h_data_cloned->SetDirectory(nullptr);
-      h_data_cloned->Divide(mc_histo.get());
-      h_data_cloned->SetMaximum(1.5);
-      h_data_cloned->SetMinimum(0.5);
+      h_data_cloned->Divide(mc_histo_stat_only.get());
+      h_data_cloned->SetMaximum(2);
+      h_data_cloned->SetMinimum(0);
       h_data_cloned->SetLineColor(m_config.error_fill_color);
 
       h_data_cloned->GetYaxis()->SetTitle("Data / MC");
@@ -770,9 +819,26 @@ namespace plotIt {
       h_data_cloned->GetYaxis()->SetTitleSize(0.08);
       h_data_cloned->GetYaxis()->SetNdivisions(505, true);
 
-      h_data_cloned->SetFillStyle(m_config.error_fill_style);
-      h_data_cloned->SetFillColor(m_config.error_fill_color);
-      h_data_cloned->Draw("E2");
+      // Compute systematic errors in %
+      std::shared_ptr<TH1> h_systematics(static_cast<TH1*>(h_data_cloned->Clone()));
+      h_systematics->SetDirectory(nullptr);
+      h_systematics->Reset(); // Keep binning
+      h_systematics->SetMarkerSize(0);
+
+      for (uint32_t i = 1; i <= (uint32_t) h_systematics->GetNbinsX(); i++) {
+
+        if (mc_histo_syst_only->GetBinContent(i) == 0)
+          continue;
+
+        float syst = mc_histo_syst_only->GetBinContent(i) / (mc_histo_syst_only->GetBinError(i) + mc_histo_syst_only->GetBinContent(i));
+        h_systematics->SetBinContent(i, 1);
+        h_systematics->SetBinError(i, 1 - syst);
+      }
+
+      h_systematics->SetFillStyle(m_config.error_fill_style);
+      h_systematics->SetFillColor(m_config.error_fill_color);
+      h_systematics->Draw("E2");
+
       h_data_cloned->Draw("P X0 same");
 
       if (plot.fit_ratio) {
@@ -824,6 +890,7 @@ namespace plotIt {
       h_data_cloned->Draw("P X0 same");
 
       m_temporaryObjects.push_back(h_data_cloned);
+      m_temporaryObjects.push_back(h_systematics);
       m_temporaryObjects.push_back(hi_pad);
       m_temporaryObjects.push_back(low_pad);
     }
@@ -865,6 +932,22 @@ namespace plotIt {
     if (obj) {
       m_temporaryObjects.push_back(input);
       file.object = obj;
+
+      // Load systematics histograms
+      for (Systematic& syst: file.systematics) {
+
+        syst.object = nullptr;
+
+        std::shared_ptr<TFile> input_syst(TFile::Open(syst.path.c_str()));
+        if (! input_syst.get())
+          continue;
+
+        obj = input_syst->Get(plot.name.c_str());
+        if (obj) {
+          m_temporaryObjects.push_back(input_syst);
+          syst.object = obj;
+        }
+      }
 
       return true;
     }

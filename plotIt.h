@@ -28,8 +28,7 @@ namespace plotIt {
   enum Type {
     MC,
     SIGNAL,
-    DATA,
-    SYST
+    DATA
   };
 
   struct PlotStyle;
@@ -52,6 +51,12 @@ namespace plotIt {
     }
   };
 
+  struct Systematic {
+    std::string path;
+    TObject* object;
+
+    Summary summary;
+  };
 
   struct File {
     std::string path;
@@ -70,6 +75,8 @@ namespace plotIt {
     Type type;
 
     TObject* object;
+
+    std::vector<Systematic> systematics;
 
     int16_t order;
     Summary summary;
