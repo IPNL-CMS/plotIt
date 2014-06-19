@@ -65,6 +65,7 @@ namespace plotIt {
     float cross_section;
     float branching_ratio;
     float generated_events;
+    float scale;
 
     // For Data
     float luminosity;

@@ -182,6 +182,11 @@ namespace plotIt {
       } else
         file.type = MC;
 
+      if (node["scale"])
+        file.scale = node["scale"].as<float>();
+      else
+        file.scale = 1;
+
       if (node["cross-section"])
         file.cross_section = node["cross-section"].as<float>();
       else
@@ -425,7 +430,7 @@ namespace plotIt {
       for (File& file: m_files) {
         if (file.type == type) {
           fs::path path(file.path);
-          printf("%50s%18.2f ± %10.2f%15s%18.5f%% ± %18.5f%%\n", path.stem().c_str(), file.summary.n_events, file.summary.n_events_error, " ", file.summary.efficiency, file.summary.efficiency_error);
+          printf("%50s%18.2f ± %10.2f%15s%18.5f%% ± %18.5f%%\n", path.stem().c_str(), file.summary.n_events, file.summary.n_events_error, " ", file.summary.efficiency * 100, file.summary.efficiency_error * 100);
 
           sum_n_events += file.summary.n_events;
           sum_n_events_error += file.summary.n_events_error * file.summary.n_events_error;
@@ -549,7 +554,7 @@ namespace plotIt {
       TH1* h = dynamic_cast<TH1*>(file.object);
 
       if (file.type != DATA) {
-        float factor = m_config.scale * m_config.luminosity * file.cross_section * file.branching_ratio / file.generated_events;
+        float factor = m_config.scale * m_config.luminosity * file.scale * file.cross_section * file.branching_ratio / file.generated_events;
 
         float n_entries = h->Integral();
         file.summary.efficiency = n_entries / file.generated_events;
@@ -586,14 +591,18 @@ namespace plotIt {
 
     for (File& file: m_files) {
       if (file.type == MC) {
-        mc_stack->Add(dynamic_cast<TH1*>(file.object), getPlotStyle(file)->drawing_options.c_str());
+
+        TH1* nominal = dynamic_cast<TH1*>(file.object);
+
+        mc_stack->Add(nominal, getPlotStyle(file)->drawing_options.c_str());
         if (mc_histo_stat_only.get()) {
-          mc_histo_stat_only->Add(dynamic_cast<TH1*>(file.object));
+          mc_histo_stat_only->Add(nominal);
         } else {
-          mc_histo_stat_only.reset( static_cast<TH1*>(dynamic_cast<TH1*>(file.object)->Clone()) );
+          mc_histo_stat_only.reset( dynamic_cast<TH1*>(nominal->Clone()) );
           mc_histo_stat_only->SetDirectory(nullptr);
         }
-        mcWeight += dynamic_cast<TH1*>(file.object)->GetSumOfWeights();
+        mcWeight += nominal->GetSumOfWeights();
+
       } else if (file.type == SIGNAL) {
         signal_files.push_back(file);
       } else if (file.type == DATA) {
@@ -1096,6 +1105,7 @@ namespace plotIt {
       marker_size = 1;
       marker_color = 1;
       marker_type = 20;
+      line_color = 1;
     }
 
     if (node["fill-color"])
