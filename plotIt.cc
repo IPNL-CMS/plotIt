@@ -307,6 +307,9 @@ namespace plotIt {
       if (node["x-axis-range"])
         plot.x_axis_range = node["x-axis-range"].as<std::vector<float>>();
 
+      if (node["y-axis-range"])
+        plot.y_axis_range = node["y-axis-range"].as<std::vector<float>>();
+
       if (node["inherits-from"])
         plot.inherits_from = node["inherits-from"].as<std::string>();
       else
@@ -763,12 +766,14 @@ namespace plotIt {
     if (plot.log_y)
       safe_margin = 8;
 
-    setMaximum(toDraw[0].first, maximum * safe_margin);
+    if (plot.y_axis_range.size() != 2) {
+      setMaximum(toDraw[0].first, maximum * safe_margin);
 
-    if (minimum <= 0 && plot.log_y) {
-      minimum = 0.1;
+      if (minimum <= 0 && plot.log_y) {
+        minimum = 0.1;
+      }
+      setMinimum(toDraw[0].first, minimum * 1.20);
     }
-    setMinimum(toDraw[0].first, minimum * 1.20);
 
     // Set x and y axis titles
     setAxisTitles(toDraw[0].first, plot);

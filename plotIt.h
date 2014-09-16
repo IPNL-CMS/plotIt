@@ -133,6 +133,7 @@ namespace plotIt {
 
     // Axis range
     std::vector<float> x_axis_range;
+    std::vector<float> y_axis_range;
 
     std::vector<std::string> save_extensions;
 
@@ -459,13 +460,15 @@ namespace plotIt {
 
   template<class T>
     void setRange(T* object, Plot& plot) {
-      object->GetXaxis()->SetRangeUser(plot.x_axis_range[0], plot.x_axis_range[1]);
+      if (plot.x_axis_range.size() == 2)
+        object->GetXaxis()->SetRangeUser(plot.x_axis_range[0], plot.x_axis_range[1]);
+      if (plot.y_axis_range.size() == 2) {
+        object->SetMinimum(plot.y_axis_range[0]);
+        object->SetMaximum(plot.y_axis_range[1]);
+      }
     }
 
   void setRange(TObject* object, Plot& plot) {
-    if (plot.x_axis_range.size() != 2)
-      return;
-
     if (dynamic_cast<TH1*>(object))
       setRange(dynamic_cast<TH1*>(object), plot);
     else if (dynamic_cast<THStack*>(object))
