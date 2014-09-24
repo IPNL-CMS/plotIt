@@ -316,7 +316,7 @@ namespace plotIt {
 
     style->SetEndErrorSize(2);
     //  style->SetErrorMarker(20);
-    //style->SetErrorX(0.);
+    //style->SetErrorX(0);
 
     style->SetMarkerStyle(20);
 
@@ -399,7 +399,6 @@ namespace plotIt {
         std::string title = plot.y_axis;
         std::stringstream ss;
         ss << title << " / " << std::fixed << std::setprecision(2) << binSize;
-        std::cout << ss.str() << std::endl;
         object->GetYaxis()->SetTitle(ss.str().c_str());
       }
 
