@@ -1,6 +1,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <memory>
+#include <iomanip>
 
 #include "yaml-cpp/yaml.h"
 
@@ -391,8 +392,12 @@ namespace plotIt {
     void setAxisTitles(T* object, Plot& plot) {
       if (plot.x_axis.length() > 0)
         object->GetXaxis()->SetTitle(plot.x_axis.c_str());
-      if (plot.y_axis.length() > 0)
-        object->GetYaxis()->SetTitle(plot.y_axis.c_str());
+
+      float binSize = object->GetXaxis()->GetBinWidth(1);
+      std::string title = plot.y_axis;
+      std::stringstream ss;
+      ss << title << " / " << std::fixed << std::setprecision(2) << binSize;
+      object->GetYaxis()->SetTitle(ss.str().c_str());
 
       object->GetYaxis()->SetTitleOffset(2);
       if (plot.show_ratio)
