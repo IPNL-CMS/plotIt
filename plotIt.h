@@ -13,6 +13,13 @@
 #include <string>
 #include <glob.h>
 
+#define TITLE_FONTSIZE 26
+#define LABEL_FONTSIZE 18
+
+#define LEFT_MARGIN 0.17
+#define RIGHT_MARGIN 0.03
+#define TOP_MARGIN 0.05
+
 namespace YAML {
   class Node;
 }
@@ -279,7 +286,6 @@ namespace plotIt {
       uint32_t m_colorIndex = 1000;
   };
 
-
   TStyle* createStyle() {
     TStyle *style = new TStyle("style", "style");
 
@@ -334,7 +340,7 @@ namespace plotIt {
     style->SetOptFile(0);
     style->SetOptStat(0); // To display the mean and RMS:   SetOptStat("mr");
     style->SetStatColor(kWhite);
-    style->SetStatFont(42);
+    style->SetStatFont(43);
     style->SetStatFontSize(0.025);
     style->SetStatTextColor(1);
     style->SetStatFormat("6.4g");
@@ -343,31 +349,32 @@ namespace plotIt {
     style->SetStatW(0.15);
 
     // Margins:
-    style->SetPadTopMargin(0.05);
+    style->SetPadTopMargin(TOP_MARGIN);
     style->SetPadBottomMargin(0.13);
-    style->SetPadLeftMargin(0.16);
-    style->SetPadRightMargin(0.05);
+    style->SetPadLeftMargin(LEFT_MARGIN);
+    style->SetPadRightMargin(RIGHT_MARGIN);
 
     // For the Global title:
     style->SetOptTitle(0);
-    style->SetTitleFont(62);
+    style->SetTitleFont(63);
     style->SetTitleColor(1);
     style->SetTitleTextColor(1);
     style->SetTitleFillColor(10);
-    style->SetTitleFontSize(0.05);
+    style->SetTitleFontSize(TITLE_FONTSIZE);
 
     // For the axis titles:
 
     style->SetTitleColor(1, "XYZ");
-    style->SetTitleFont(42, "XYZ");
-    style->SetTitleSize(0.06, "XYZ");
-    style->SetTitleXOffset(0.9);
-    style->SetTitleYOffset(1);
+    style->SetTitleFont(43, "XYZ");
+    style->SetTitleSize(TITLE_FONTSIZE, "XYZ");
+    style->SetTitleXOffset(3.5);
+    style->SetTitleYOffset(2.5);
 
     style->SetLabelColor(1, "XYZ");
-    style->SetLabelFont(42, "XYZ");
-    style->SetLabelOffset(0.007, "XYZ");
-    style->SetLabelSize(0.05, "XYZ");
+    style->SetLabelFont(43, "XYZ");
+    style->SetLabelOffset(0.01, "YZ");
+    style->SetLabelOffset(0.015, "X");
+    style->SetLabelSize(LABEL_FONTSIZE, "XYZ");
 
     style->SetAxisColor(1, "XYZ");
     style->SetStripDecimals(kTRUE);

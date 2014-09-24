@@ -491,7 +491,7 @@ namespace plotIt {
 
     // Build legend
     TLegend legend(m_legend.position.x1, m_legend.position.y1, m_legend.position.x2, m_legend.position.y2);
-    legend.SetTextFont(42);
+    legend.SetTextFont(43);
     legend.SetFillStyle(0);
     legend.SetBorderSize(0);
 
@@ -511,12 +511,14 @@ namespace plotIt {
 
     // Title
     if (m_config.title.length() > 0) {
-      std::shared_ptr<TPaveText> pt = std::make_shared<TPaveText>(0.15, 0.955, 0.95, 0.995, "brNDC");
+      std::shared_ptr<TPaveText> pt = std::make_shared<TPaveText>(LEFT_MARGIN, 1 - TOP_MARGIN + 0.005, 1 - RIGHT_MARGIN, 1, "brNDC");
       m_temporaryObjects.push_back(pt);
 
       pt->SetFillStyle(0);
       pt->SetBorderSize(0);
-      pt->SetTextFont(42);
+      pt->SetMargin(0);
+      pt->SetTextFont(43);
+      pt->SetTextSize(TITLE_FONTSIZE - 6);
       pt->SetTextAlign(32);
 
       pt->AddText(m_config.parsed_title.c_str());
@@ -742,16 +744,16 @@ namespace plotIt {
     if (plot.show_ratio) {
       hi_pad = std::make_shared<TPad>("pad_hi", "", 0., 0.33, 0.99, 0.99);
       hi_pad->Draw();
-      hi_pad->SetLeftMargin(0.17);
+      hi_pad->SetLeftMargin(LEFT_MARGIN);
       hi_pad->SetBottomMargin(0.015);
-      hi_pad->SetRightMargin(0.03);
+      hi_pad->SetRightMargin(RIGHT_MARGIN);
 
       low_pad = std::make_shared<TPad>("pad_lo", "", 0., 0., 0.99, 0.33);
       low_pad->Draw();
-      low_pad->SetLeftMargin(0.17);
+      low_pad->SetLeftMargin(LEFT_MARGIN);
       low_pad->SetTopMargin(1.);
       low_pad->SetBottomMargin(0.3);
-      low_pad->SetRightMargin(0.03);
+      low_pad->SetRightMargin(RIGHT_MARGIN);
       low_pad->SetTickx(1);
 
       hi_pad->cd();
@@ -824,15 +826,21 @@ namespace plotIt {
       h_data_cloned->SetMaximum(2);
       h_data_cloned->SetMinimum(0);
 
+      h_data_cloned->SetLabelFont(43, "XYZ");
+      h_data_cloned->SetTitleFont(43, "XYZ");
+      h_data_cloned->SetLabelSize(LABEL_FONTSIZE, "XYZ");
+      h_data_cloned->SetTitleSize(TITLE_FONTSIZE, "XYZ");
+      h_data_cloned->SetTickLength(0.03, "XYZ");
+
       h_data_cloned->GetYaxis()->SetTitle("Data / MC");
-      h_data_cloned->GetXaxis()->SetTitleOffset(1.10);
-      h_data_cloned->GetYaxis()->SetTitleOffset(0.55);
-      h_data_cloned->GetXaxis()->SetTickLength(0.06);
-      h_data_cloned->GetXaxis()->SetLabelSize(0.085);
-      h_data_cloned->GetYaxis()->SetLabelSize(0.07);
-      h_data_cloned->GetXaxis()->SetTitleSize(0.09);
-      h_data_cloned->GetYaxis()->SetTitleSize(0.08);
       h_data_cloned->GetYaxis()->SetNdivisions(505, true);
+      h_data_cloned->GetYaxis()->SetTitleOffset(2.5);
+      h_data_cloned->GetYaxis()->SetLabelOffset(0.01);
+      h_data_cloned->GetYaxis()->SetTickLength(0.04);
+
+      h_data_cloned->GetXaxis()->SetTitleOffset(3.5);
+      h_data_cloned->GetXaxis()->SetLabelOffset(0.015);
+      h_data_cloned->GetXaxis()->SetTickLength(0.07);
 
       // Compute systematic errors in %
       std::shared_ptr<TH1> h_systematics(static_cast<TH1*>(h_data_cloned->Clone()));
@@ -891,8 +899,8 @@ namespace plotIt {
 
           std::shared_ptr<TLatex> t(new TLatex(plot.fit_legend_position.x, plot.fit_legend_position.y, legend.c_str()));
           t->SetNDC(true);
-          t->SetTextFont(42);
-          t->SetTextSize(0.07);
+          t->SetTextFont(43);
+          t->SetTextSize(LABEL_FONTSIZE - 4);
           t->Draw();
 
           m_temporaryObjects.push_back(t);
