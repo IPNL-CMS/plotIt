@@ -799,13 +799,13 @@ namespace plotIt {
 
     // Then signal
     for (File& signal: signal_files) {
-      std::string options = getPlotStyle(signal)->drawing_options + " X0 same";
+      std::string options = getPlotStyle(signal)->drawing_options + " same";
       signal.object->Draw(options.c_str());
     }
 
     // And finally data
     if (h_data.get()) {
-      data_drawing_options += " X0 same";
+      data_drawing_options += " E X0 same";
       h_data->Draw(data_drawing_options.c_str());
       m_temporaryObjects.push_back(h_data);
     }
@@ -823,7 +823,6 @@ namespace plotIt {
       h_data_cloned->Divide(mc_histo_stat_only.get());
       h_data_cloned->SetMaximum(2);
       h_data_cloned->SetMinimum(0);
-      h_data_cloned->SetLineColor(m_config.error_fill_color);
 
       h_data_cloned->GetYaxis()->SetTitle("Data / MC");
       h_data_cloned->GetXaxis()->SetTitleOffset(1.10);
@@ -855,7 +854,7 @@ namespace plotIt {
       h_systematics->SetFillColor(m_config.error_fill_color);
       h_systematics->Draw("E2");
 
-      h_data_cloned->Draw("P X0 same");
+      h_data_cloned->Draw("P E X0 same");
 
       if (plot.fit_ratio) {
         float xMin = h_data_cloned->GetXaxis()->GetBinLowEdge(1);
@@ -903,7 +902,7 @@ namespace plotIt {
         m_temporaryObjects.push_back(fct);
       }
 
-      h_data_cloned->Draw("P X0 same");
+      h_data_cloned->Draw("P E X0 same");
 
       m_temporaryObjects.push_back(h_data_cloned);
       m_temporaryObjects.push_back(h_systematics);
@@ -1113,6 +1112,7 @@ namespace plotIt {
       marker_color = 1;
       marker_type = 20;
       line_color = 1;
+      line_width = 1; // For uncertainties
     }
 
     if (node["fill-color"])
