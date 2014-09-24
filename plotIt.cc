@@ -19,7 +19,6 @@
 #include <TColor.h>
 #include <TVirtualFitter.h>
 
-#include <iomanip>
 #include <vector>
 #include <map>
 #include <fstream>
@@ -499,7 +498,7 @@ namespace plotIt {
     addToLegend(legend, SIGNAL);
     addToLegend(legend, DATA);
 
-    if (plot.show_errors) {
+    if (hasMC && plot.show_errors) {
       TLegendEntry* entry = legend.AddEntry("errors", "Uncertainties", "f");
       entry->SetLineWidth(0);
       entry->SetLineColor(m_config.error_fill_color);
