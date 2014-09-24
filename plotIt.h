@@ -362,7 +362,7 @@ namespace plotIt {
     style->SetTitleFont(42, "XYZ");
     style->SetTitleSize(0.06, "XYZ");
     style->SetTitleXOffset(0.9);
-    style->SetTitleYOffset(10);
+    style->SetTitleYOffset(1);
 
     style->SetLabelColor(1, "XYZ");
     style->SetLabelFont(42, "XYZ");
@@ -390,16 +390,19 @@ namespace plotIt {
 
   template<class T>
     void setAxisTitles(T* object, Plot& plot) {
-      if (plot.x_axis.length() > 0)
+      if (plot.x_axis.length() > 0) {
         object->GetXaxis()->SetTitle(plot.x_axis.c_str());
+      }
 
-      float binSize = object->GetXaxis()->GetBinWidth(1);
-      std::string title = plot.y_axis;
-      std::stringstream ss;
-      ss << title << " / " << std::fixed << std::setprecision(2) << binSize;
-      object->GetYaxis()->SetTitle(ss.str().c_str());
+      if (plot.y_axis.length() > 0) {
+        float binSize = object->GetXaxis()->GetBinWidth(1);
+        std::string title = plot.y_axis;
+        std::stringstream ss;
+        ss << title << " / " << std::fixed << std::setprecision(2) << binSize;
+        std::cout << ss.str() << std::endl;
+        object->GetYaxis()->SetTitle(ss.str().c_str());
+      }
 
-      object->GetYaxis()->SetTitleOffset(2);
       if (plot.show_ratio)
         object->GetXaxis()->SetLabelSize(0);
     }

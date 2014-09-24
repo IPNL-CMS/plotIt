@@ -265,6 +265,7 @@ namespace plotIt {
       if (node["x-axis"])
         plot.x_axis = node["x-axis"].as<std::string>();
 
+      plot.y_axis = "Events";
       if (node["y-axis"])
         plot.y_axis = node["y-axis"].as<std::string>();
 
@@ -775,7 +776,9 @@ namespace plotIt {
     }
 
     // Set x and y axis titles
-    setAxisTitles(toDraw[0].first, plot);
+    for (auto& obj: toDraw) {
+      setAxisTitles(obj.first, plot);
+    }
 
     // First, draw MC
     if (mc_stack.get()) {
