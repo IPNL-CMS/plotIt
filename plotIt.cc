@@ -777,11 +777,6 @@ namespace plotIt {
       setMinimum(toDraw[0].first, minimum * 1.20);
     }
 
-    // Set x and y axis titles
-    for (auto& obj: toDraw) {
-      setAxisTitles(obj.first, plot);
-    }
-
     // First, draw MC
     if (mc_stack.get()) {
       mc_stack->Draw("same");
@@ -811,6 +806,13 @@ namespace plotIt {
       h_data->Draw(data_drawing_options.c_str());
       m_temporaryObjects.push_back(h_data);
     }
+    
+    // Set x and y axis titles, and default style
+    for (auto& obj: toDraw) {
+      setDefaultStyle(obj.first);
+      setAxisTitles(obj.first, plot);
+    }
+
 
     // Redraw only axis
     toDraw[0].first->Draw("axis same");
@@ -826,20 +828,9 @@ namespace plotIt {
       h_data_cloned->SetMaximum(2);
       h_data_cloned->SetMinimum(0);
 
-      h_data_cloned->SetLabelFont(43, "XYZ");
-      h_data_cloned->SetTitleFont(43, "XYZ");
-      h_data_cloned->SetLabelSize(LABEL_FONTSIZE, "XYZ");
-      h_data_cloned->SetTitleSize(TITLE_FONTSIZE, "XYZ");
-      h_data_cloned->SetTickLength(0.03, "XYZ");
-
-      h_data_cloned->GetYaxis()->SetTitle("Data / MC");
-      h_data_cloned->GetYaxis()->SetNdivisions(505, true);
-      h_data_cloned->GetYaxis()->SetTitleOffset(2.5);
-      h_data_cloned->GetYaxis()->SetLabelOffset(0.01);
+      setDefaultStyle(h_data_cloned.get());
       h_data_cloned->GetYaxis()->SetTickLength(0.04);
-
-      h_data_cloned->GetXaxis()->SetTitleOffset(3.5);
-      h_data_cloned->GetXaxis()->SetLabelOffset(0.015);
+      h_data_cloned->GetYaxis()->SetNdivisions(505, true);
       h_data_cloned->GetXaxis()->SetTickLength(0.07);
 
       // Compute systematic errors in %

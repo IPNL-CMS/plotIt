@@ -397,11 +397,11 @@ namespace plotIt {
 
   template<class T>
     void setAxisTitles(T* object, Plot& plot) {
-      if (plot.x_axis.length() > 0) {
+      if (plot.x_axis.length() > 0 && object->GetXaxis()) {
         object->GetXaxis()->SetTitle(plot.x_axis.c_str());
       }
 
-      if (plot.y_axis.length() > 0) {
+      if (plot.y_axis.length() > 0 && object->GetYaxis()) {
         float binSize = object->GetXaxis()->GetBinWidth(1);
         std::string title = plot.y_axis;
         std::stringstream ss;
@@ -409,7 +409,7 @@ namespace plotIt {
         object->GetYaxis()->SetTitle(ss.str().c_str());
       }
 
-      if (plot.show_ratio)
+      if (plot.show_ratio && object->GetXaxis())
         object->GetXaxis()->SetLabelSize(0);
     }
 
@@ -418,6 +418,34 @@ namespace plotIt {
       setAxisTitles(dynamic_cast<TH1*>(object), plot);
     else if (dynamic_cast<THStack*>(object))
       setAxisTitles(dynamic_cast<THStack*>(object), plot);
+  }
+
+  template<class T>
+    void setDefaultStyle(T* object) {
+
+      object->SetLabelFont(43, "XYZ");
+      object->SetTitleFont(43, "XYZ");
+      object->SetLabelSize(LABEL_FONTSIZE, "XYZ");
+      object->SetTitleSize(TITLE_FONTSIZE, "XYZ");
+      object->SetTickLength(0.03, "XYZ");
+
+      object->GetYaxis()->SetTitle("Data / MC");
+      object->GetYaxis()->SetNdivisions(510);
+      object->GetYaxis()->SetTitleOffset(2.5);
+      object->GetYaxis()->SetLabelOffset(0.01);
+      object->GetYaxis()->SetTickLength(0.03);
+
+      object->GetXaxis()->SetTitleOffset(3.5);
+      object->GetXaxis()->SetLabelOffset(0.015);
+      object->GetXaxis()->SetTickLength(0.03);
+      
+    }
+
+  void setDefaultStyle(TObject* object) {
+    if (dynamic_cast<TH1*>(object))
+      setDefaultStyle(dynamic_cast<TH1*>(object));
+    else if (dynamic_cast<THStack*>(object))
+      setDefaultStyle(dynamic_cast<THStack*>(object)->GetHistogram());
   }
 
   template<class T>
