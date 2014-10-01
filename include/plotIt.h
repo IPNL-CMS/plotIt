@@ -1,3 +1,5 @@
+#pragma once
+
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <memory>
@@ -13,12 +15,7 @@
 #include <string>
 #include <glob.h>
 
-#define TITLE_FONTSIZE 26
-#define LABEL_FONTSIZE 18
-
-#define LEFT_MARGIN 0.17
-#define RIGHT_MARGIN 0.03
-#define TOP_MARGIN 0.05
+#include <defines.h>
 
 namespace YAML {
   class Node;
@@ -243,10 +240,19 @@ namespace plotIt {
       plotIt(const fs::path& outputPath, const std::string& configFile);
       void plotAll();
 
-      //void setLuminosity(float luminosity) {
-        //m_luminosity = luminosity;
-        //parseTitle();
-      //}
+      std::vector<File>& getFiles() {
+        return m_files;
+      }
+
+      Configuration getConfiguration() const {
+        return m_config;
+      }
+
+      void addTemporaryObject(const std::shared_ptr<TObject>& object) {
+        m_temporaryObjects.push_back(object);
+      }
+
+      std::shared_ptr<PlotStyle> getPlotStyle(const File& file);
 
       friend PlotStyle;
 
@@ -258,8 +264,6 @@ namespace plotIt {
       // Plot method
       bool plot(Plot& plot);
 
-      bool plotTH1(TCanvas& c, Plot& plot);
-
       bool expandFiles();
       bool expandObjects(File& file, std::vector<Plot>& plots);
       bool loadObject(File& file, const Plot& plot);
@@ -269,7 +273,6 @@ namespace plotIt {
       void addToLegend(TLegend& legend, Type type);
 
       void parseTitle();
-      std::shared_ptr<PlotStyle> getPlotStyle(File& file);
 
       std::vector<Label> mergeLabels(const std::vector<Label>& labels);
 
@@ -296,238 +299,6 @@ namespace plotIt {
       // For colors
       uint32_t m_colorIndex = 1000;
   };
-
-  TStyle* createStyle() {
-    TStyle *style = new TStyle("style", "style");
-
-    // For the canvas:
-    style->SetCanvasBorderMode(0);
-    style->SetCanvasColor(kWhite);
-    style->SetCanvasDefH(800); //Height of canvas
-    style->SetCanvasDefW(800); //Width of canvas
-    style->SetCanvasDefX(0);   //POsition on screen
-    style->SetCanvasDefY(0);
-
-    // For the Pad:
-    style->SetPadBorderMode(0);
-    style->SetPadColor(kWhite);
-    style->SetPadGridX(false);
-    style->SetPadGridY(false);
-    style->SetGridColor(0);
-    style->SetGridStyle(3);
-    style->SetGridWidth(1);
-
-    // For the frame:
-    style->SetFrameBorderMode(0);
-    style->SetFrameBorderSize(1);
-    style->SetFrameFillColor(0);
-    style->SetFrameFillStyle(0);
-    style->SetFrameLineColor(1);
-    style->SetFrameLineStyle(1);
-    style->SetFrameLineWidth(1);
-
-    // For the histo:
-    style->SetHistLineColor(1);
-    style->SetHistLineStyle(0);
-    style->SetHistLineWidth(1);
-
-    style->SetEndErrorSize(2);
-    //  style->SetErrorMarker(20);
-    //style->SetErrorX(0);
-
-    style->SetMarkerStyle(20);
-
-    //For the fit/function:
-    style->SetOptFit(1);
-    style->SetFitFormat("5.4g");
-    style->SetFuncColor(2);
-    style->SetFuncStyle(1);
-    style->SetFuncWidth(1);
-
-    //For the date:
-    style->SetOptDate(0);
-
-    // For the statistics box:
-    style->SetOptFile(0);
-    style->SetOptStat(0); // To display the mean and RMS:   SetOptStat("mr");
-    style->SetStatColor(kWhite);
-    style->SetStatFont(43);
-    style->SetStatFontSize(0.025);
-    style->SetStatTextColor(1);
-    style->SetStatFormat("6.4g");
-    style->SetStatBorderSize(1);
-    style->SetStatH(0.1);
-    style->SetStatW(0.15);
-
-    // Margins:
-    style->SetPadTopMargin(TOP_MARGIN);
-    style->SetPadBottomMargin(0.13);
-    style->SetPadLeftMargin(LEFT_MARGIN);
-    style->SetPadRightMargin(RIGHT_MARGIN);
-
-    // For the Global title:
-    style->SetOptTitle(0);
-    style->SetTitleFont(63);
-    style->SetTitleColor(1);
-    style->SetTitleTextColor(1);
-    style->SetTitleFillColor(10);
-    style->SetTitleFontSize(TITLE_FONTSIZE);
-
-    // For the axis titles:
-
-    style->SetTitleColor(1, "XYZ");
-    style->SetTitleFont(43, "XYZ");
-    style->SetTitleSize(TITLE_FONTSIZE, "XYZ");
-    style->SetTitleXOffset(3.5);
-    style->SetTitleYOffset(2.5);
-
-    style->SetLabelColor(1, "XYZ");
-    style->SetLabelFont(43, "XYZ");
-    style->SetLabelOffset(0.01, "YZ");
-    style->SetLabelOffset(0.015, "X");
-    style->SetLabelSize(LABEL_FONTSIZE, "XYZ");
-
-    style->SetAxisColor(1, "XYZ");
-    style->SetStripDecimals(kTRUE);
-    style->SetTickLength(0.03, "XYZ");
-    style->SetNdivisions(510, "XYZ");
-    style->SetPadTickX(1);  // To get tick marks on the opposite side of the frame
-    style->SetPadTickY(1);
-
-    style->SetOptLogx(0);
-    style->SetOptLogy(0);
-    style->SetOptLogz(0);
-
-    style->SetHatchesSpacing(1.3);
-    style->SetHatchesLineWidth(1);
-
-    style->cd();
-
-    return style;
-  }
-
-  template<class T>
-    void setAxisTitles(T* object, Plot& plot) {
-      if (plot.x_axis.length() > 0 && object->GetXaxis()) {
-        object->GetXaxis()->SetTitle(plot.x_axis.c_str());
-      }
-
-      if (plot.y_axis.length() > 0 && object->GetYaxis()) {
-        float binSize = object->GetXaxis()->GetBinWidth(1);
-        std::string title = plot.y_axis;
-        std::stringstream ss;
-        ss << title << " / " << std::fixed << std::setprecision(2) << binSize;
-        object->GetYaxis()->SetTitle(ss.str().c_str());
-      }
-
-      if (plot.show_ratio && object->GetXaxis())
-        object->GetXaxis()->SetLabelSize(0);
-    }
-
-  void setAxisTitles(TObject* object, Plot& plot) {
-    if (dynamic_cast<TH1*>(object))
-      setAxisTitles(dynamic_cast<TH1*>(object), plot);
-    else if (dynamic_cast<THStack*>(object))
-      setAxisTitles(dynamic_cast<THStack*>(object), plot);
-  }
-
-  template<class T>
-    void setDefaultStyle(T* object) {
-
-      object->SetLabelFont(43, "XYZ");
-      object->SetTitleFont(43, "XYZ");
-      object->SetLabelSize(LABEL_FONTSIZE, "XYZ");
-      object->SetTitleSize(TITLE_FONTSIZE, "XYZ");
-      object->SetTickLength(0.03, "XYZ");
-
-      object->GetYaxis()->SetTitle("Data / MC");
-      object->GetYaxis()->SetNdivisions(510);
-      object->GetYaxis()->SetTitleOffset(2.5);
-      object->GetYaxis()->SetLabelOffset(0.01);
-      object->GetYaxis()->SetTickLength(0.03);
-
-      object->GetXaxis()->SetTitleOffset(3.5);
-      object->GetXaxis()->SetLabelOffset(0.015);
-      object->GetXaxis()->SetTickLength(0.03);
-      
-    }
-
-  void setDefaultStyle(TObject* object) {
-    if (dynamic_cast<TH1*>(object))
-      setDefaultStyle(dynamic_cast<TH1*>(object));
-    else if (dynamic_cast<THStack*>(object))
-      setDefaultStyle(dynamic_cast<THStack*>(object)->GetHistogram());
-  }
-
-  template<class T>
-    float getMaximum(T* object) {
-      return object->GetMaximum();
-    }
-
-  float getMaximum(TObject* object) {
-    if (dynamic_cast<TH1*>(object))
-      return getMaximum(dynamic_cast<TH1*>(object));
-    else if (dynamic_cast<THStack*>(object))
-      return getMaximum(dynamic_cast<THStack*>(object));
-
-    return std::numeric_limits<float>::lowest();
-  }
-
-  template<class T>
-    float getMinimum(T* object) {
-      return object->GetMinimum();
-    }
-
-  float getMinimum(TObject* object) {
-    if (dynamic_cast<TH1*>(object))
-      return getMinimum(dynamic_cast<TH1*>(object));
-    else if (dynamic_cast<THStack*>(object))
-      return getMinimum(dynamic_cast<THStack*>(object));
-
-    return std::numeric_limits<float>::infinity();
-  }
-
-  template<class T>
-    void setMaximum(T* object, float minimum) {
-      object->SetMaximum(minimum);
-    }
-
-  void setMaximum(TObject* object, float minimum) {
-    if (dynamic_cast<TH1*>(object))
-      setMaximum(dynamic_cast<TH1*>(object), minimum);
-    else if (dynamic_cast<THStack*>(object))
-      setMaximum(dynamic_cast<THStack*>(object), minimum);
-  }
-
-  template<class T>
-    void setMinimum(T* object, float minimum) {
-      object->SetMinimum(minimum);
-    }
-
-  void setMinimum(TObject* object, float minimum) {
-    if (dynamic_cast<TH1*>(object))
-      setMinimum(dynamic_cast<TH1*>(object), minimum);
-    else if (dynamic_cast<THStack*>(object))
-      setMinimum(dynamic_cast<THStack*>(object), minimum);
-  }
-
-  template<class T>
-    void setRange(T* object, Plot& plot) {
-      if (plot.x_axis_range.size() == 2)
-        object->GetXaxis()->SetRangeUser(plot.x_axis_range[0], plot.x_axis_range[1]);
-      if (plot.y_axis_range.size() == 2) {
-        object->SetMinimum(plot.y_axis_range[0]);
-        object->SetMaximum(plot.y_axis_range[1]);
-      }
-    }
-
-  void setRange(TObject* object, Plot& plot) {
-    if (dynamic_cast<TH1*>(object))
-      setRange(dynamic_cast<TH1*>(object), plot);
-    else if (dynamic_cast<THStack*>(object))
-      setRange(dynamic_cast<THStack*>(object)->GetHistogram(), plot);
-  }
-
 };
 
 inline std::vector<std::string> glob(const std::string& pat) {
