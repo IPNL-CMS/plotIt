@@ -26,11 +26,11 @@ SOFLAGS		    =
 AR            = ar
 ARFLAGS       = -cq
 
-CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -Iexternal/include/ -I$(shell echo $(BOOST_ROOT))/include
-LIBS  		    = $(ROOTLIBS) -lboost_filesystem -lboost_regex
+CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -Iinclude/ -Iexternal/include/ -I$(shell echo $(BOOST_ROOT))/include
+LIBS  		    = $(ROOTLIBS) -lboost_filesystem -lboost_regex -lboost_system
 GLIBS	    	  = $(ROOTGLIBS)
 #------------------------------------------------------------------------------
-SOURCES		= $(wildcard *.$(SrcSuf))
+SOURCES		= $(wildcard src/*.$(SrcSuf))
 OBJECTS		= $(SOURCES:.$(SrcSuf)=.$(ObjSuf))
 DEPENDS		= $(SOURCES:.$(SrcSuf)=.d)
 SOBJECTS	= $(SOURCES:.$(SrcSuf)=.$(DllSuf))
@@ -42,10 +42,10 @@ SOBJECTS	= $(SOURCES:.$(SrcSuf)=.$(DllSuf))
 all: plotIt
 
 clean:
-	@rm *.o;
-	@rm *.d;
+	@rm -f $(OBJECTS);
+	@rm -f $(DEPENDS);
 
-plotIt: plotIt.o
+plotIt: $(OBJECTS)
 	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ -Wl,-Bstatic -lyaml-cpp -Wl,-Bdynamic $(LIBS)
 
 %.o: %.cc
