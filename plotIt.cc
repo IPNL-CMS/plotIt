@@ -587,7 +587,7 @@ namespace plotIt {
 
     // Build a THStack for MC files and a vector for signal
     float mcWeight = 0;
-    std::shared_ptr<THStack> mc_stack = std::make_shared<THStack>("mc_stack", "mc_stack");
+    std::shared_ptr<THStack> mc_stack;
     std::shared_ptr<TH1> mc_histo_stat_only;
     std::shared_ptr<TH1> mc_histo_syst_only;
     std::shared_ptr<TH1> mc_histo_stat_syst;
@@ -601,6 +601,8 @@ namespace plotIt {
       if (file.type == MC) {
 
         TH1* nominal = dynamic_cast<TH1*>(file.object);
+        if (mc_stack.get())
+          mc_stack = std::make_shared<THStack>("mc_stack", "mc_stack");
 
         mc_stack->Add(nominal, getPlotStyle(file)->drawing_options.c_str());
         if (mc_histo_stat_only.get()) {
