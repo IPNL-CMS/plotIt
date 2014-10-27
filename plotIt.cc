@@ -262,6 +262,9 @@ namespace plotIt {
       plot.name = it->first.as<std::string>();
 
       YAML::Node node = it->second;
+      if (node["exclude"])
+        plot.exclude = node["exclude"].as<std::string>();
+
       if (node["x-axis"])
         plot.x_axis = node["x-axis"].as<std::string>();
 
@@ -1016,6 +1019,12 @@ namespace plotIt {
 
         // Check name
         if (fnmatch(plot.name.c_str(), obj->GetName(), FNM_CASEFOLD) == 0) {
+
+          // Check if this name is excluded
+          if ((plot.exclude.length() > 0) && (fnmatch(plot.exclude.c_str(), obj->GetName(), FNM_CASEFOLD) == 0)) {
+            continue;
+          }
+
           // Got it!
           match = true;
           plots.push_back(plot.Clone(obj->GetName()));

@@ -132,6 +132,7 @@ namespace plotIt {
 
   struct Plot {
     std::string name;
+    std::string exclude;
 
     bool normalized;
     bool log_y;
