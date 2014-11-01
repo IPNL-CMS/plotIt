@@ -129,6 +129,11 @@ namespace plotIt {
     }
   };
 
+  struct Label {
+    std::string text;
+    uint32_t size = LABEL_FONTSIZE;
+    Point position;
+  };
 
   struct Plot {
     std::string name;
@@ -157,6 +162,8 @@ namespace plotIt {
     std::string inherits_from;
 
     uint16_t rebin;
+
+    std::vector<Label> labels;
 
     void print() {
       std::cout << "Plot '" << name << "'" << std::endl;
@@ -213,6 +220,7 @@ namespace plotIt {
     int16_t ratio_fit_error_fill_color = 42;
     int16_t ratio_fit_error_fill_style = 1001;
 
+    std::vector<Label> labels;
 
     std::string title;
     std::string parsed_title;
@@ -262,6 +270,8 @@ namespace plotIt {
 
       void parseTitle();
       std::shared_ptr<PlotStyle> getPlotStyle(File& file);
+
+      std::vector<Label> mergeLabels(const std::vector<Label>& labels);
 
       fs::path m_outputPath;
 

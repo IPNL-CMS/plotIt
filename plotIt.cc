@@ -92,6 +92,25 @@ namespace plotIt {
       throw YAML::ParserException(YAML::Mark::null_mark(), "Your configuration file must have a 'files' list");
     }
 
+    const auto& parseLabelsNode = [](YAML::Node& node) -> std::vector<Label> {
+      std::vector<Label> labels;
+
+      for (YAML::const_iterator it = node.begin(); it != node.end(); ++it) {
+        const YAML::Node& labelNode = *it;
+
+        Label label;
+        label.text = labelNode["text"].as<std::string>();
+        label.position = labelNode["position"].as<Point>();
+
+        if (labelNode["size"])
+          label.size = labelNode["size"].as<uint32_t>();
+
+        labels.push_back(label);
+      }
+
+      return labels;
+    };
+
     if (f["configuration"]) {
       YAML::Node node = f["configuration"];
 
@@ -140,6 +159,10 @@ namespace plotIt {
       if (node["ratio-fit-error-fill-color"])
         m_config.ratio_fit_error_fill_color = loadColor(node["ratio-fit-error-fill-color"]);
 
+      if (node["labels"]) {
+        YAML::Node labels = node["labels"];
+        m_config.labels = parseLabelsNode(labels);
+      }
     }
 
     YAML::Node groups = f["groups"];
@@ -322,6 +345,11 @@ namespace plotIt {
         plot.rebin = node["rebin"].as<uint16_t>();
       else
         plot.rebin = 1;
+
+      if (node["labels"]) {
+        YAML::Node labels = node["labels"];
+        plot.labels = parseLabelsNode(labels);
+      }
 
       m_plots.push_back(plot);
     }
@@ -526,6 +554,22 @@ namespace plotIt {
 
       pt->AddText(m_config.parsed_title.c_str());
       pt->Draw();
+    }
+
+    c.cd();
+
+    const auto& labels = mergeLabels(plot.labels);
+
+    // Labels
+    for (auto& label: labels) {
+
+      std::shared_ptr<TLatex> t(new TLatex(label.position.x, label.position.y, label.text.c_str()));
+      t->SetNDC(true);
+      t->SetTextFont(43);
+      t->SetTextSize(label.size);
+      t->Draw();
+
+      m_temporaryObjects.push_back(t);
     }
 
     fs::path outputName = m_outputPath / plot.name;
@@ -993,6 +1037,31 @@ namespace plotIt {
     m_files = files;
 
     return true;
+  }
+
+  /**
+   * Merge the labels of the global configuration and the current plot.
+   * If some are duplicated, only keep the plot label
+   **/
+  std::vector<Label> plotIt::mergeLabels(const std::vector<Label>& plotLabels) {
+    std::vector<Label> labels = plotLabels;
+
+    // Add labels from global configuration, and check for duplicates
+    for (auto& globalLabel: m_config.labels) {
+
+      bool duplicated = false;
+      for (auto& label: plotLabels) {
+        if (globalLabel.text == label.text) {
+          duplicated = true;
+          break;
+        }
+      }
+
+      if (! duplicated)
+        labels.push_back(globalLabel);
+    }
+
+    return labels;
   }
 
   /**
