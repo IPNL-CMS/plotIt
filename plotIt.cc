@@ -601,7 +601,7 @@ namespace plotIt {
       if (file.type == MC) {
 
         TH1* nominal = dynamic_cast<TH1*>(file.object);
-        if (mc_stack.get())
+        if (!mc_stack.get())
           mc_stack = std::make_shared<THStack>("mc_stack", "mc_stack");
 
         mc_stack->Add(nominal, getPlotStyle(file)->drawing_options.c_str());
