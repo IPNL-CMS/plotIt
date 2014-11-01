@@ -268,8 +268,6 @@ namespace plotIt {
       bool expandObjects(File& file, std::vector<Plot>& plots);
       bool loadObject(File& file, const Plot& plot);
 
-      void setTHStyle(File& file);
-
       void addToLegend(TLegend& legend, Type type);
 
       void parseTitle();

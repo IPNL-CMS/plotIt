@@ -54,9 +54,7 @@ plotIt: $(OBJECTS)
 # Make the dependencies
 %.d: %.cc
 	@echo "Generating dependencies for $<"
-	@set -e; $(CXX) -M $(CXXFLAGS) $< \
-	| sed 's%\($*\)\.o[ :]*%\1.o $@ : %g' > $@; \
-	[ -s $@ ] || rm -f $@
+	@ $(CXX) $(CXXFLAGS) -MM $< | sed -e 's@^\(.*\)\.o:@src/\1.d src/\1.o:@' > $@
 
 ifneq ($(MAKECMDGOALS), clean) 
 -include $(DEPENDS) 

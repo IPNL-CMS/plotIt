@@ -3,34 +3,27 @@
 // For fnmatch()
 #include <fnmatch.h>
 
-#include <TH1.h>
-#include <TF1.h>
-#include <TStyle.h>
 #include <TList.h>
 #include <TCollection.h>
 #include <TCanvas.h>
+#include <TError.h>
 #include <TFile.h>
 #include <TKey.h>
-#include <THStack.h>
 #include <TLatex.h>
 #include <TLegend.h>
 #include <TLegendEntry.h>
 #include <TPaveText.h>
 #include <TColor.h>
-#include <TVirtualFitter.h>
 
 #include <vector>
 #include <map>
 #include <fstream>
-#include <limits>
-#include <TLorentzVector.h>
 
 #include "tclap/CmdLine.h"
 
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/format.hpp>
 
 #include <plotters.h>
 #include <utilities.h>
@@ -387,39 +380,6 @@ namespace plotIt {
     boost::algorithm::replace_all(m_config.parsed_title, "%lumi%", lumiStr);
   }
 
-  void plotIt::setTHStyle(File& file) {
-    TH1* h = dynamic_cast<TH1*>(file.object);
-
-    std::shared_ptr<PlotStyle> style = getPlotStyle(file);
-
-    if (style->fill_color != -1)
-      h->SetFillColor(style->fill_color);
-
-    if (style->fill_type != -1)
-      h->SetFillStyle(style->fill_type);
-
-    if (style->line_color != -1)
-      h->SetLineColor(style->line_color);
-
-    if (style->line_width != -1)
-      h->SetLineWidth(style->line_width);
-
-    if (style->line_type != -1)
-      h->SetLineStyle(style->line_type);
-
-    if (style->marker_size != -1)
-      h->SetMarkerSize(style->marker_size);
-
-    if (style->marker_color != -1)
-      h->SetMarkerColor(style->marker_color);
-
-    if (style->marker_type != -1)
-      h->SetMarkerStyle(style->marker_type);
-
-    if (file.type == MC && style->line_color == -1 && style->fill_color != -1)
-      h->SetLineColor(style->fill_color);
-  }
-
   void plotIt::addToLegend(TLegend& legend, Type type) {
     for (File& file: m_files) {
       if (file.type == type) {
@@ -743,27 +703,6 @@ namespace plotIt {
     }
 
     return true;
-  }
-
-  TFile* loadHistograms(const std::string& file, std::map<std::string, TH1*>& histograms) {
-    TFile* f = TFile::Open(file.c_str());
-
-    TList *list = f->GetListOfKeys();
-    TIter iter(list);
-
-    TKey* key;
-    TObject* obj;
-
-    while ((key = static_cast<TKey*>(iter()))) {
-      obj = key->ReadObj();
-      if (! obj->InheritsFrom("TH1"))
-        continue;
-
-      TH1* hist = static_cast<TH1*>(obj);
-      histograms[hist->GetName()] = hist;
-    }
-
-    return f;
   }
 
   std::shared_ptr<PlotStyle> plotIt::getPlotStyle(const File& file) {
