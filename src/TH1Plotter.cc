@@ -25,14 +25,20 @@ namespace plotIt {
       TH1* h = dynamic_cast<TH1*>(file.object);
 
       if (file.type != DATA) {
-        float factor = m_plotIt.getConfiguration().scale * m_plotIt.getConfiguration().luminosity * file.scale * file.cross_section * file.branching_ratio / file.generated_events;
+        float factor = m_plotIt.getConfiguration().luminosity * file.cross_section * file.branching_ratio / file.generated_events;
+        if (! m_plotIt.getConfiguration().ignore_scales) {
+          factor *= m_plotIt.getConfiguration().scale * file.scale;
+        }
 
         float n_entries = h->Integral();
         file.summary.efficiency = n_entries / file.generated_events;
         file.summary.efficiency_error = sqrt( (file.summary.efficiency * (1 - file.summary.efficiency)) / file.generated_events );
 
         file.summary.n_events = n_entries * factor;
-        file.summary.n_events_error = m_plotIt.getConfiguration().scale * m_plotIt.getConfiguration().luminosity * file.cross_section * file.branching_ratio * file.summary.efficiency_error;
+        file.summary.n_events_error = m_plotIt.getConfiguration().luminosity * file.cross_section * file.branching_ratio * file.summary.efficiency_error;
+        if (! m_plotIt.getConfiguration().ignore_scales) {
+          file.summary.n_events_error *= m_plotIt.getConfiguration().scale * file.scale;
+        }
 
         h->Scale(factor);
       } else {
