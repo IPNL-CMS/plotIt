@@ -28,13 +28,12 @@ namespace plotIt {
   void setAxisTitles(TObject* object, Plot& plot);
 
   template<class T>
-    void setDefaultStyle(T* object) {
+    void setDefaultStyle(T* object, float topBottomScaleFactor) {
 
       object->SetLabelFont(43, "XYZ");
       object->SetTitleFont(43, "XYZ");
       object->SetLabelSize(LABEL_FONTSIZE, "XYZ");
       object->SetTitleSize(TITLE_FONTSIZE, "XYZ");
-      object->SetTickLength(0.03, "XYZ");
 
       object->GetYaxis()->SetTitle("Data / MC");
       object->GetYaxis()->SetNdivisions(510);
@@ -42,13 +41,22 @@ namespace plotIt {
       object->GetYaxis()->SetLabelOffset(0.01);
       object->GetYaxis()->SetTickLength(0.03);
 
-      object->GetXaxis()->SetTitleOffset(3.5);
-      object->GetXaxis()->SetLabelOffset(0.015);
+      object->GetXaxis()->SetTitleOffset(1.5 * topBottomScaleFactor);
+      object->GetXaxis()->SetLabelOffset(0.012 * topBottomScaleFactor);
       object->GetXaxis()->SetTickLength(0.03);
       
     }
 
-  void setDefaultStyle(TObject* object);
+  void setDefaultStyle(TObject* object, float topBottomScaleFactor);
+
+
+  template<class T>
+    void hideXTitle(T* object) {
+      object->GetXaxis()->SetTitle("");
+      object->GetXaxis()->SetTitleSize();
+    }
+
+  void hideXTitle(TObject* object);
 
   template<class T>
     float getMaximum(T* object) {

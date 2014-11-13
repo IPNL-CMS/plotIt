@@ -228,7 +228,7 @@ namespace plotIt {
       low_pad->Draw();
       low_pad->SetLeftMargin(LEFT_MARGIN);
       low_pad->SetTopMargin(1.);
-      low_pad->SetBottomMargin(0.3);
+      low_pad->SetBottomMargin(BOTTOM_MARGIN / .3333);
       low_pad->SetRightMargin(RIGHT_MARGIN);
       low_pad->SetTickx(1);
 
@@ -285,15 +285,15 @@ namespace plotIt {
     
     // Set x and y axis titles, and default style
     for (auto& obj: toDraw) {
-      setDefaultStyle(obj.first);
+      setDefaultStyle(obj.first, (plot.show_ratio) ? 0.6666 : 1.);
       setAxisTitles(obj.first, plot);
     }
-
 
     // Redraw only axis
     toDraw[0].first->Draw("axis same");
 
     if (plot.show_ratio) {
+
       // Compute ratio and draw it
       low_pad->cd();
       low_pad->SetGridy();
@@ -304,7 +304,7 @@ namespace plotIt {
       h_data_cloned->SetMaximum(2);
       h_data_cloned->SetMinimum(0);
 
-      setDefaultStyle(h_data_cloned.get());
+      setDefaultStyle(h_data_cloned.get(), 1. / 0.3333);
       h_data_cloned->GetYaxis()->SetTickLength(0.04);
       h_data_cloned->GetYaxis()->SetNdivisions(505, true);
       h_data_cloned->GetXaxis()->SetTickLength(0.07);
@@ -378,6 +378,9 @@ namespace plotIt {
       }
 
       h_data_cloned->Draw("P E X0 same");
+
+      // Hide top pad label
+      hideXTitle(toDraw[0].first);
 
       m_plotIt.addTemporaryObject(h_data_cloned);
       m_plotIt.addTemporaryObject(h_systematics);

@@ -70,7 +70,7 @@ namespace plotIt {
 
     // Margins:
     style->SetPadTopMargin(TOP_MARGIN);
-    style->SetPadBottomMargin(0.13);
+    style->SetPadBottomMargin(BOTTOM_MARGIN);
     style->SetPadLeftMargin(LEFT_MARGIN);
     style->SetPadRightMargin(RIGHT_MARGIN);
 
@@ -122,11 +122,18 @@ namespace plotIt {
       setAxisTitles(dynamic_cast<THStack*>(object), plot);
   }
 
-  void setDefaultStyle(TObject* object) {
+  void setDefaultStyle(TObject* object, float topBottomScaleFactor) {
     if (dynamic_cast<TH1*>(object))
-      setDefaultStyle(dynamic_cast<TH1*>(object));
+      setDefaultStyle(dynamic_cast<TH1*>(object), topBottomScaleFactor);
     else if (dynamic_cast<THStack*>(object))
-      setDefaultStyle(dynamic_cast<THStack*>(object)->GetHistogram());
+      setDefaultStyle(dynamic_cast<THStack*>(object)->GetHistogram(), topBottomScaleFactor);
+  }
+
+  void hideXTitle(TObject* object) {
+    if (dynamic_cast<TH1*>(object))
+      hideXTitle(dynamic_cast<TH1*>(object));
+    else if (dynamic_cast<THStack*>(object))
+      hideXTitle(dynamic_cast<THStack*>(object));
   }
 
   float getMaximum(TObject* object) {

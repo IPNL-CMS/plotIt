@@ -6,4 +6,5 @@
 #define LEFT_MARGIN 0.17
 #define RIGHT_MARGIN 0.03
 #define TOP_MARGIN 0.05
+#define BOTTOM_MARGIN 0.13
 
