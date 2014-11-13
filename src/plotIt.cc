@@ -512,16 +512,20 @@ namespace plotIt {
 
     legend.Draw();
 
+    float topMargin = TOP_MARGIN;
+    if (plot.show_ratio)
+      topMargin /= .6666;
+
     // Luminosity label
     if (m_config.lumi_label_parsed.length() > 0) {
-      std::shared_ptr<TPaveText> pt = std::make_shared<TPaveText>(LEFT_MARGIN, 1 - 0.5 * TOP_MARGIN, 1 - RIGHT_MARGIN, 1, "brNDC");
+      std::shared_ptr<TPaveText> pt = std::make_shared<TPaveText>(LEFT_MARGIN, 1 - 0.5 * topMargin, 1 - RIGHT_MARGIN, 1, "brNDC");
       m_temporaryObjects.push_back(pt);
 
       pt->SetFillStyle(0);
       pt->SetBorderSize(0);
       pt->SetMargin(0);
       pt->SetTextFont(42);
-      pt->SetTextSize(0.6 * TOP_MARGIN);
+      pt->SetTextSize(0.6 * topMargin);
       pt->SetTextAlign(33);
 
       pt->AddText(m_config.lumi_label_parsed.c_str());
@@ -530,14 +534,14 @@ namespace plotIt {
 
     // Experiment
     if (m_config.experiment.length() > 0) {
-      std::shared_ptr<TPaveText> pt = std::make_shared<TPaveText>(LEFT_MARGIN, 1 - 0.5 * TOP_MARGIN, 1 - RIGHT_MARGIN, 1, "brNDC");
+      std::shared_ptr<TPaveText> pt = std::make_shared<TPaveText>(LEFT_MARGIN, 1 - 0.5 * topMargin, 1 - RIGHT_MARGIN, 1, "brNDC");
       m_temporaryObjects.push_back(pt);
 
       pt->SetFillStyle(0);
       pt->SetBorderSize(0);
       pt->SetMargin(0);
       pt->SetTextFont(62);
-      pt->SetTextSize(0.75 * TOP_MARGIN);
+      pt->SetTextSize(0.75 * topMargin);
       pt->SetTextAlign(13);
 
       std::string text = m_config.experiment;

@@ -217,13 +217,14 @@ namespace plotIt {
     std::shared_ptr<TPad> hi_pad;
     std::shared_ptr<TPad> low_pad;
     if (plot.show_ratio) {
-      hi_pad = std::make_shared<TPad>("pad_hi", "", 0., 0.33, 0.99, 0.99);
+      hi_pad = std::make_shared<TPad>("pad_hi", "", 0., 0.33333, 1, 1);
       hi_pad->Draw();
+      hi_pad->SetTopMargin(TOP_MARGIN / .6666);
       hi_pad->SetLeftMargin(LEFT_MARGIN);
       hi_pad->SetBottomMargin(0.015);
       hi_pad->SetRightMargin(RIGHT_MARGIN);
 
-      low_pad = std::make_shared<TPad>("pad_lo", "", 0., 0., 0.99, 0.33);
+      low_pad = std::make_shared<TPad>("pad_lo", "", 0., 0., 1, 0.33333);
       low_pad->Draw();
       low_pad->SetLeftMargin(LEFT_MARGIN);
       low_pad->SetTopMargin(1.);
