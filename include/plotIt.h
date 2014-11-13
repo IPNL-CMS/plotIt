@@ -162,6 +162,8 @@ namespace plotIt {
 
     std::vector<Label> labels;
 
+    std::string extra_label;
+
     void print() {
       std::cout << "Plot '" << name << "'" << std::endl;
       std::cout << "\tx_axis: " << x_axis << std::endl;
@@ -219,10 +221,15 @@ namespace plotIt {
 
     std::vector<Label> labels;
 
-    std::string title;
-    std::string parsed_title;
+    std::string experiment = "CMS";
+    std::string extra_label;
+
+    std::string lumi_label;
+    std::string lumi_label_parsed;
 
     std::string root;
+
+    bool ignore_scales = false;
 
     Configuration() {
       width = height = 800;
@@ -248,6 +255,10 @@ namespace plotIt {
         return m_config;
       }
 
+      Configuration& getConfigurationForEditing() {
+        return m_config;
+      }
+
       void addTemporaryObject(const std::shared_ptr<TObject>& object) {
         m_temporaryObjects.push_back(object);
       }
@@ -270,7 +281,7 @@ namespace plotIt {
 
       void addToLegend(TLegend& legend, Type type);
 
-      void parseTitle();
+      void parseLumiLabel();
 
       std::vector<Label> mergeLabels(const std::vector<Label>& labels);
 

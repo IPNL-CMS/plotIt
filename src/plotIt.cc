@@ -24,6 +24,7 @@
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 
 #include <plotters.h>
 #include <utilities.h>
@@ -118,8 +119,14 @@ namespace plotIt {
       if (node["height"])
         m_config.height = node["height"].as<float>();
 
-      if (node["title"])
-        m_config.title = node["title"].as<std::string>();
+      if (node["experiment"])
+        m_config.experiment = node["experiment"].as<std::string>();
+
+      if (node["extra-label"])
+        m_config.extra_label = node["extra-label"].as<std::string>();
+
+      if (node["luminosity-label"])
+        m_config.lumi_label = node["luminosity-label"].as<std::string>();
 
       if (node["root"])
         m_config.root = node["root"].as<std::string>();
@@ -349,6 +356,9 @@ namespace plotIt {
         plot.labels = parseLabelsNode(labels);
       }
 
+      if (node["extra-label"])
+        plot.extra_label = node["extra-label"].as<std::string>();
+
       m_plots.push_back(plot);
     }
 
@@ -364,12 +374,12 @@ namespace plotIt {
         m_legend.position = node["position"].as<Position>();
     }
 
-    parseTitle();
+    parseLumiLabel();
   }
 
-  void plotIt::parseTitle() {
+  void plotIt::parseLumiLabel() {
 
-    m_config.parsed_title = m_config.title;
+    m_config.lumi_label_parsed = m_config.lumi_label;
 
     float lumi = m_config.luminosity / 1000.;
 
@@ -377,7 +387,7 @@ namespace plotIt {
     out << std::fixed << std::setprecision(2) << lumi;
     std::string lumiStr = out.str();
 
-    boost::algorithm::replace_all(m_config.parsed_title, "%lumi%", lumiStr);
+    boost::algorithm::replace_all(m_config.lumi_label_parsed, "%lumi%", lumiStr);
   }
 
   void plotIt::addToLegend(TLegend& legend, Type type) {
@@ -502,19 +512,48 @@ namespace plotIt {
 
     legend.Draw();
 
-    // Title
-    if (m_config.title.length() > 0) {
-      std::shared_ptr<TPaveText> pt = std::make_shared<TPaveText>(LEFT_MARGIN, 1 - TOP_MARGIN + 0.005, 1 - RIGHT_MARGIN, 1, "brNDC");
+    // Luminosity label
+    if (m_config.lumi_label_parsed.length() > 0) {
+      std::shared_ptr<TPaveText> pt = std::make_shared<TPaveText>(LEFT_MARGIN, 1 - 0.5 * TOP_MARGIN, 1 - RIGHT_MARGIN, 1, "brNDC");
       m_temporaryObjects.push_back(pt);
 
       pt->SetFillStyle(0);
       pt->SetBorderSize(0);
       pt->SetMargin(0);
-      pt->SetTextFont(43);
-      pt->SetTextSize(TITLE_FONTSIZE - 6);
-      pt->SetTextAlign(32);
+      pt->SetTextFont(42);
+      pt->SetTextSize(0.6 * TOP_MARGIN);
+      pt->SetTextAlign(33);
 
-      pt->AddText(m_config.parsed_title.c_str());
+      pt->AddText(m_config.lumi_label_parsed.c_str());
+      pt->Draw();
+    }
+
+    // Experiment
+    if (m_config.experiment.length() > 0) {
+      std::shared_ptr<TPaveText> pt = std::make_shared<TPaveText>(LEFT_MARGIN, 1 - 0.5 * TOP_MARGIN, 1 - RIGHT_MARGIN, 1, "brNDC");
+      m_temporaryObjects.push_back(pt);
+
+      pt->SetFillStyle(0);
+      pt->SetBorderSize(0);
+      pt->SetMargin(0);
+      pt->SetTextFont(62);
+      pt->SetTextSize(0.75 * TOP_MARGIN);
+      pt->SetTextAlign(13);
+
+      std::string text = m_config.experiment;
+      if (m_config.extra_label.length() || plot.extra_label.length()) {
+        std::string extra_label = plot.extra_label;
+        if (extra_label.length() == 0) {
+          extra_label = m_config.extra_label;
+        }
+
+        boost::format fmt("%s #font[52]{#scale[0.76]{%s}}");
+        fmt % m_config.experiment % extra_label;
+
+        text = fmt.str();
+      }
+
+      pt->AddText(text.c_str());
       pt->Draw();
     }
 
@@ -797,21 +836,7 @@ int main(int argc, char** argv) {
 
     TCLAP::ValueArg<std::string> outputFolderArg("o", "output-folder", "output folder", true, "", "string", cmd);
 
-    //TCLAP::SwitchArg dataArg("", "data", "Is this data?", false);
-    //TCLAP::SwitchArg mcArg("", "mc", "Is this mc?", false);
-
-    //cmd.xorAdd(dataArg, mcArg);
-
-    //TCLAP::SwitchArg semimuArg("", "semimu", "Is this semi-mu channel?", false);
-    //TCLAP::SwitchArg semieArg("", "semie", "Is this semi-e channel?", false);
-
-    //cmd.xorAdd(semimuArg, semieArg);
-
-    //TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jet to require", true, 2, "int", cmd);
-
-    //TCLAP::ValueArg<float> lumiArg("", "lumi", "Luminosity", false, 19700, "int", cmd);
-
-    //TCLAP::ValueArg<std::string> configArg("", "config-path", "Path to the configuration files", false, "./config", "int", cmd);
+    TCLAP::SwitchArg ignoreScaleArg("", "ignore-scales", "Ignore any scales present in the configuration file", cmd, false);
 
     TCLAP::UnlabeledValueArg<std::string> configFileArg("configFile", "configuration file", true, "", "string", cmd);
 
@@ -827,7 +852,7 @@ int main(int argc, char** argv) {
     }
 
     plotIt::plotIt p(outputPath, configFileArg.getValue());
-    //p.setLuminosity(lumiArg.getValue());
+    p.getConfigurationForEditing().ignore_scales = ignoreScaleArg.getValue();
 
     p.plotAll();
 
