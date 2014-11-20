@@ -99,6 +99,8 @@ namespace plotIt {
         node[it->first.as<std::string>()] = it->second;
       }
     }
+
+    parseIncludes(node);
   }
 
   void plotIt::parseConfigurationFile(const std::string& file) {
