@@ -270,6 +270,7 @@ namespace plotIt {
     private:
       void checkOrThrow(YAML::Node& node, const std::string& name, const std::string& file);
       void parseConfigurationFile(const std::string& file);
+      void parseIncludes(YAML::Node& node);
       int16_t loadColor(const YAML::Node& node);
 
       // Plot method

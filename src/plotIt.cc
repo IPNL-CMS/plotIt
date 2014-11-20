@@ -84,6 +84,23 @@ namespace plotIt {
     }
   }
 
+  void plotIt::parseIncludes(YAML::Node& node) {
+
+    if (! node["include"])
+      return;
+
+    std::vector<std::string> files = node["include"].as<std::vector<std::string>>();
+    node.remove("include");
+
+    for (std::string& file: files) {
+      YAML::Node root = YAML::LoadFile(file);
+
+      for (YAML::const_iterator it = root.begin(); it != root.end(); ++it) {
+        node[it->first.as<std::string>()] = it->second;
+      }
+    }
+  }
+
   void plotIt::parseConfigurationFile(const std::string& file) {
     YAML::Node f = YAML::LoadFile(file);
 
@@ -187,6 +204,7 @@ namespace plotIt {
 
 
     YAML::Node files = f["files"];
+    parseIncludes(files);
 
     for (YAML::const_iterator it = files.begin(); it != files.end(); ++it) {
       File file;
@@ -284,6 +302,8 @@ namespace plotIt {
     }
 
     YAML::Node plots = f["plots"];
+    parseIncludes(plots);
+
     for (YAML::const_iterator it = plots.begin(); it != plots.end(); ++it) {
       Plot plot;
 
