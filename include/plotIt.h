@@ -126,6 +126,30 @@ namespace plotIt {
     }
   };
 
+  struct Position {
+    float x1 = 0;
+    float y1 = 0;
+
+    float x2 = 0;
+    float y2 = 0;
+
+    bool operator==(const Position& other) {
+      return
+        (fabs(x1 - other.x1) < 1e-6) &&
+        (fabs(y1 - other.y1) < 1e-6) &&
+        (fabs(x2 - other.x2) < 1e-6) &&
+        (fabs(y2 - other.y2) < 1e-6);
+    }
+
+    bool empty() const {
+      return
+        (x1 == 0) &&
+        (x2 == 0) &&
+        (y1 == 0) &&
+        (y2 == 0);
+    }
+  };
+
   struct Label {
     std::string text;
     uint32_t size = LABEL_FONTSIZE;
@@ -164,6 +188,8 @@ namespace plotIt {
 
     std::string extra_label;
 
+    Position legend_position;
+
     void print() {
       std::cout << "Plot '" << name << "'" << std::endl;
       std::cout << "\tx_axis: " << x_axis << std::endl;
@@ -178,22 +204,6 @@ namespace plotIt {
       clone.name = new_name;
 
       return clone;
-    }
-  };
-
-  struct Position {
-    float x1;
-    float y1;
-
-    float x2;
-    float y2;
-
-    bool operator==(const Position& other) {
-      return
-        (fabs(x1 - other.x1) < 1e-6) &&
-        (fabs(y1 - other.y1) < 1e-6) &&
-        (fabs(x2 - other.x2) < 1e-6) &&
-        (fabs(y2 - other.y2) < 1e-6);
     }
   };
 

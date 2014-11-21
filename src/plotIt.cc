@@ -381,6 +381,9 @@ namespace plotIt {
       if (node["extra-label"])
         plot.extra_label = node["extra-label"].as<std::string>();
 
+      if (node["legend-position"])
+        plot.legend_position = node["legend-position"].as<Position>();
+
       m_plots.push_back(plot);
     }
 
@@ -514,8 +517,12 @@ namespace plotIt {
     if (plot.log_y)
       c.SetLogy();
 
+    Position legend_position = m_legend.position;
+    if (!plot.legend_position.empty())
+      legend_position = plot.legend_position;
+
     // Build legend
-    TLegend legend(m_legend.position.x1, m_legend.position.y1, m_legend.position.x2, m_legend.position.y2);
+    TLegend legend(legend_position.x1, legend_position.y1, legend_position.x2, legend_position.y2);
     legend.SetTextFont(43);
     legend.SetFillStyle(0);
     legend.SetBorderSize(0);
